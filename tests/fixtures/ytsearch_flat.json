@@ -1,0 +1,94 @@
+{
+  "_type": "playlist",
+  "id": "daft punk",
+  "title": "daft punk",
+  "extractor": "youtube:search",
+  "extractor_key": "YoutubeSearch",
+  "webpage_url": "ytsearch8:daft punk",
+  "entries": [
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "K0HSD_i2DvA",
+      "url": "https://www.youtube.com/watch?v=K0HSD_i2DvA",
+      "title": "Daft Punk - Around The World (Official Music Video Remastered)",
+      "description": "Listen, order & watch now ...",
+      "duration": 242,
+      "channel_id": "UC_kRDKYrUlrbtrSiyu5Tflg",
+      "channel": "Daft Punk",
+      "channel_url": "https://www.youtube.com/channel/UC_kRDKYrUlrbtrSiyu5Tflg",
+      "uploader": "Daft Punk",
+      "uploader_id": null,
+      "thumbnails": [
+        {"url": "https://i.ytimg.com/vi/K0HSD_i2DvA/hq720.jpg?sqp=small", "height": 202, "width": 360},
+        {"url": "https://i.ytimg.com/vi/K0HSD_i2DvA/hq720.jpg?sqp=large", "height": 404, "width": 720}
+      ],
+      "view_count": 138633916,
+      "live_status": null
+    },
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "a5uQMwRMHcs",
+      "url": "https://www.youtube.com/watch?v=a5uQMwRMHcs",
+      "title": "  Da Funk \n (Official Video)  ",
+      "duration": 331.6,
+      "channel": null,
+      "uploader": "DaftPunkVEVO",
+      "thumbnail": "https://i.ytimg.com/vi/a5uQMwRMHcs/hqdefault.jpg"
+    },
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "LIVEstream1",
+      "url": "https://www.youtube.com/watch?v=LIVEstream1",
+      "title": "lofi radio 24/7",
+      "duration": null,
+      "channel": "Lofi Channel",
+      "live_status": "is_live",
+      "thumbnails": [
+        {"url": "https://i.ytimg.com/vi/LIVEstream1/tiny.jpg", "height": 90, "width": 120}
+      ]
+    },
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "NoMetadata1"
+    },
+    {
+      "_type": "url",
+      "ie_key": "YoutubeTab",
+      "id": "PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG",
+      "url": "https://www.youtube.com/playlist?list=PLx0sYbCqOb8TBPRdmBHs5Iftvv9TPboYG",
+      "title": "Some playlist"
+    },
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "bad id!",
+      "title": "Invalid id"
+    },
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "K0HSD_i2DvA",
+      "title": "Duplicate of the first entry"
+    },
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "Priv8Video1",
+      "title": "[Private video]"
+    },
+    "not-a-dict",
+    {
+      "_type": "url",
+      "ie_key": "Youtube",
+      "id": "BadNumbers1",
+      "title": "Weird numbers",
+      "duration": "4:20",
+      "channel": "   ",
+      "thumbnails": [{"url": "javascript:alert(1)", "width": 500}, {"width": 300}, "x"]
+    }
+  ]
+}

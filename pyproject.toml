@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "pixelfm"
+version = "2.1.0"
+description = "A retro-futuristic terminal music player for YouTube."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+keywords = ["music", "youtube", "terminal", "tui", "player", "textual"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Environment :: Console :: Curses",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Multimedia :: Sound/Audio :: Players",
+]
+dependencies = [
+    "textual>=8.2,<9",
+    "rich>=14",
+    "yt-dlp[default]>=2026.8.19",
+    "pillow>=12",
+    "certifi>=2024",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0",
+    "pytest-asyncio>=1.3",
+    "ruff>=0.15",
+]
+
+[project.scripts]
+ytm = "pixelfm.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pixelfm"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # bugbear
+    "UP",  # pyupgrade
+    "SIM", # simplify
+    "RUF", # ruff-specific
+    "ASYNC",
+]
+# Textual declares BINDINGS/breakpoints as class-level lists by design.
+ignore = ["RUF012"]
+# "2×" play counts use the multiplication sign on purpose.
+allowed-confusables = ["×"]
+
+[tool.ruff.lint.per-file-ignores]
+# Blocking pathlib calls are fine inside async test functions.
+"tests/*" = ["ASYNC240"]
+
+[tool.ruff.format]
+quote-style = "double"

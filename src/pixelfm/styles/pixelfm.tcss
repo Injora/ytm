@@ -1,0 +1,714 @@
+/* PixelFM 2.0 - cyberpunk DJ booth. Colours come from the registered theme:
+   $primary = neon cyan (active), $secondary = magenta (labels, hot levels). */
+
+Screen {
+    background: $background;
+    layout: vertical;
+}
+
+/* ---------------------------------------------------------------- header */
+
+#header {
+    height: 3;
+    margin: 1 2 0 2;
+}
+
+#logo {
+    width: auto;
+    height: 3;
+    margin-right: 2;
+}
+
+#header-brand {
+    display: none;
+    width: auto;
+    margin-right: 2;
+}
+
+#header-status {
+    width: auto;
+    height: 3;
+    content-align: left middle;
+    margin-right: 2;
+}
+
+#header-engine {
+    width: 1fr;
+    height: 3;
+    content-align: left middle;
+    color: $text-muted;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    margin-right: 2;
+}
+
+#header-hints {
+    width: auto;
+    height: 3;
+    content-align: right middle;
+}
+
+#tabs {
+    height: 1;
+    margin: 1 2 0 2;
+}
+
+#views {
+    height: 1fr;
+    margin: 0 2;  /* children have no side margins (see #status note) */
+}
+
+/* Shared panel look: thin technical rules; the focused panel lights up cyan. */
+#deck, #signal, #mixer, #booth-queue-panel, #search, #results, #queue,
+#queue-table, #playlist-nav, #playlist-table, #liked-table, #downloads-table,
+#recent-table, #settings, #now-playing {
+    border: solid $border-blurred;
+    border-title-color: $secondary;
+    border-title-style: bold;
+    border-subtitle-color: $text-muted;
+    background: $background;
+}
+
+#search:focus, #results:focus, #queue-table:focus, #playlist-nav:focus,
+#playlist-table:focus, #liked-table:focus, #downloads-table:focus,
+#recent-table:focus, #settings:focus {
+    border: solid $primary;
+    border-title-color: $primary;
+    background-tint: $foreground 0%;  /* no focus wash; the border shows focus */
+}
+
+#booth-queue:focus {
+    background-tint: $foreground 0%;
+}
+
+DataTable > .datatable--header {
+    background: $background;
+    color: $text-muted;
+    text-style: bold;
+}
+
+DataTable {
+    scrollbar-size-vertical: 1;
+}
+
+/* ------------------------------------------------------------ booth deck */
+
+#booth-view, #booth-main {
+    height: 1fr;
+}
+
+#deck {
+    height: auto;
+    padding: 0 1;
+    margin-top: 1;
+    background: $surface;
+}
+
+#deck-row {
+    height: auto;
+}
+
+#deck-art {
+    margin-right: 2;
+}
+
+#deck-info {
+    width: 1fr;
+    height: auto;
+}
+
+#deck-title {
+    height: auto;
+    max-height: 2;
+    text-overflow: ellipsis;
+}
+
+#deck-artist, #deck-meta, #deck-state {
+    height: 1;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+#deck-meta {
+    margin-top: 1;
+}
+
+#deck-timeline {
+    height: 1;
+    margin-top: 1;
+}
+
+#deck-timeline:focus {
+    background: $boost;
+}
+
+#transport {
+    height: 1;
+    margin-top: 1;
+}
+
+Button.transport {
+    margin-right: 1;
+    min-width: 8;
+    color: $text-muted;
+    background: $panel;
+    text-style: bold;
+}
+
+/* Labels change (PLAY/PAUSE, LIKE/LIKED, SAVE/42%); keep widths stable. */
+#tx-play, #tx-download {
+    min-width: 10;
+}
+
+#tx-like {
+    min-width: 9;
+}
+
+Button.transport:hover {
+    background: $panel-lighten-1;
+    color: $foreground;
+}
+
+Button.transport:focus {
+    background: $primary;
+    color: $background;
+    text-style: bold;
+}
+
+Button.transport.-on {
+    color: $secondary;
+}
+
+Button.transport.-on:focus {
+    color: $background;
+    background: $secondary;
+}
+
+Button.transport:disabled {
+    color: $text-disabled;
+    background: $surface;
+}
+
+/* --------------------------------------------------------- signal / mixer */
+
+#booth-lower {
+    height: 1fr;
+    min-height: 7;
+}
+
+#signal {
+    width: 1fr;
+    padding: 0 1;
+}
+
+#meter {
+    height: 3;
+}
+
+#spectrum {
+    height: 1fr;
+    min-height: 3;
+    margin-top: 1;
+}
+
+#loudness {
+    height: 1;
+}
+
+#mixer {
+    width: 44;
+    margin-left: 1;
+    padding: 0 1;
+}
+
+Fader, Toggle {
+    height: 1;
+    margin-bottom: 1;
+}
+
+Fader:focus, Toggle:focus {
+    background: $boost;
+    text-style: bold;
+}
+
+#mixer-status {
+    height: auto;
+}
+
+#mixer-compact {
+    display: none;
+    height: 1;
+    margin-top: 1;
+}
+
+#booth-queue-panel {
+    width: 42;
+    margin: 1 0 0 1;
+}
+
+#booth-queue {
+    border: none;
+    height: 1fr;
+}
+
+/* --------------------------------------------------------------- search */
+
+#search {
+    margin-top: 1;
+    padding: 0 1;
+}
+
+#search-view, #queue-view, #playlists-view, .list-view, #settings-view {
+    height: 1fr;
+}
+
+#body {
+    height: 1fr;
+}
+
+#results, #queue-table, #playlist-table, #liked-table, #downloads-table,
+#recent-table {
+    width: 1fr;
+    height: 1fr;
+}
+
+#queue {
+    width: 34;
+    height: 1fr;
+    margin-left: 1;
+    padding: 0 1;
+}
+
+/* ------------------------------------------------------- library views */
+
+#queue-view, #playlists-view, .list-view, #settings-view {
+    padding-top: 1;
+}
+
+#playlist-nav {
+    width: 30;
+    height: 1fr;
+    margin-right: 1;
+    scrollbar-size-vertical: 1;
+}
+
+#playlist-nav > .option-list--option-highlighted,
+#settings > .option-list--option-highlighted {
+    background: $block-cursor-blurred-background;
+    color: $block-cursor-blurred-foreground;
+}
+
+#playlist-nav:focus > .option-list--option-highlighted,
+#settings:focus > .option-list--option-highlighted {
+    background: $block-cursor-background;
+    color: $block-cursor-foreground;
+    text-style: bold;
+}
+
+#playlist-main {
+    width: 1fr;
+}
+
+.view-info {
+    height: auto;
+    padding: 0 1;
+}
+
+Input.filter {
+    height: 1;
+    border: none;
+    padding: 0 1;
+    background: $surface;
+}
+
+Input.filter:focus {
+    background: $panel;
+}
+
+.empty {
+    display: none;
+    height: auto;
+    padding: 1 2;
+}
+
+.empty.-visible {
+    display: block;
+}
+
+#settings {
+    height: auto;
+    max-height: 16;
+}
+
+#settings-paths {
+    height: auto;
+    margin-top: 1;
+    padding: 0 1;
+}
+
+/* ----------------------------------------------------- mini now playing */
+
+#now-playing {
+    height: auto;
+    margin: 0 2;
+    padding: 0 1;
+    border-title-color: $primary;
+    background: $surface;
+}
+
+Screen.-booth #now-playing {
+    display: none;
+}
+
+#np-row {
+    height: auto;
+}
+
+#art {
+    margin-right: 2;
+}
+
+#np-meta {
+    width: 1fr;
+    height: auto;
+}
+
+#np-title, #np-artist, #np-state, #np-progress {
+    height: 1;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+#np-viz {
+    height: 1;
+}
+
+/* ---------------------------------------------------------------- status */
+
+#status {
+    height: 1;
+    padding: 0 3;  /* padding, not margin: sibling margins shrink fr widths */
+}
+
+#status-message {
+    width: 1fr;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+#status-meta {
+    width: auto;
+    margin-left: 2;
+}
+
+Footer {
+    background: $background;
+}
+
+/* --------------------------------------------------------------- dialogs */
+
+ModalScreen {
+    align: center middle;
+    background: $background 70%;
+}
+
+.dialog {
+    width: 68;
+    max-width: 90%;
+    height: auto;
+    max-height: 85%;
+    padding: 1 2;
+    border: solid $primary;
+    border-title-color: $secondary;
+    background: $surface;
+}
+
+.dialog.help {
+    width: 96;
+}
+
+.dialog-title {
+    margin-bottom: 1;
+}
+
+.dialog-hint {
+    margin-top: 1;
+}
+
+.dialog Input {
+    border: solid $border-blurred;
+    background: $background;
+}
+
+.dialog Input:focus {
+    border: solid $primary;
+}
+
+.dialog OptionList {
+    height: auto;
+    max-height: 14;
+    border: none;
+    background: $surface;
+}
+
+/* ------------------------------------------------------------ responsive */
+
+/* Compact layout: one-line header, smaller deck, no side panels. */
+Screen.-compact #header {
+    height: 1;
+    margin-top: 0;
+}
+
+Screen.-compact #logo {
+    display: none;
+}
+
+Screen.-compact #header-brand {
+    display: block;
+}
+
+Screen.-compact #header-status, Screen.-compact #header-engine,
+Screen.-compact #header-hints {
+    height: 1;
+}
+
+Screen.-compact #tabs {
+    margin-top: 0;
+}
+
+Screen.-compact #deck {
+    margin-top: 0;
+}
+
+Screen.-compact #deck-meta, Screen.-compact #deck-timeline,
+Screen.-compact #transport {
+    margin-top: 0;
+}
+
+Screen.-compact #booth-queue-panel, Screen.-compact #queue,
+Screen.-compact #spectrum, Screen.-compact #loudness, Screen.-compact #mixer,
+Screen.-compact #np-viz {
+    display: none;
+}
+
+Screen.-compact #mixer-compact {
+    display: block;
+}
+
+Screen.-compact #booth-lower, Screen.-compact #signal {
+    height: auto;
+    min-height: 0;
+}
+
+Screen.-compact #search {
+    margin-top: 0;
+}
+
+Screen.-compact #queue-view, Screen.-compact #playlists-view,
+Screen.-compact .list-view, Screen.-compact #settings-view {
+    padding-top: 0;
+}
+
+Screen.-narrow #queue, Screen.-xnarrow #queue,
+Screen.-narrow #booth-queue-panel, Screen.-xnarrow #booth-queue-panel {
+    display: none;
+}
+
+Screen.-narrow #playlist-nav {
+    width: 22;
+}
+
+Screen.-xnarrow #playlist-nav {
+    width: 16;
+}
+
+Screen.-xnarrow #header-engine, Screen.-xnarrow #status-meta {
+    display: none;
+}
+
+Screen.-xnarrow #header, Screen.-xnarrow #tabs, Screen.-xnarrow #views,
+Screen.-xnarrow #now-playing {
+    margin-left: 0;
+    margin-right: 0;
+}
+
+Screen.-xnarrow #deck-art, Screen.-xnarrow #art {
+    display: none;
+}
+
+/* Very small terminals: keep the deck, transport, and level meter. */
+Screen.-tiny #header, Screen.-tiny #art, Screen.-tiny #np-viz,
+Screen.-tiny #np-artist, Screen.-tiny #deck-art, Screen.-tiny #deck-meta,
+Screen.-tiny #mixer-compact {
+    display: none;
+}
+
+Screen.-tiny #tabs {
+    margin: 0;
+}
+
+Screen.-tiny #search {
+    margin: 0;
+    height: 1;
+    border: none;
+    padding: 0 1;
+}
+
+Screen.-tiny #now-playing, Screen.-tiny #deck {
+    margin: 0;
+    border: none;
+}
+
+/* ------------------------------------------------------------ ASCII mode */
+
+Screen.-ascii #deck, Screen.-ascii #signal, Screen.-ascii #mixer,
+Screen.-ascii #booth-queue-panel, Screen.-ascii #search, Screen.-ascii #results,
+Screen.-ascii #queue, Screen.-ascii #queue-table, Screen.-ascii #playlist-nav,
+Screen.-ascii #playlist-table, Screen.-ascii #liked-table,
+Screen.-ascii #downloads-table, Screen.-ascii #recent-table,
+Screen.-ascii #settings, Screen.-ascii #now-playing {
+    border: ascii $border-blurred;
+}
+
+Screen.-ascii #search:focus, Screen.-ascii #results:focus,
+Screen.-ascii #queue-table:focus, Screen.-ascii #playlist-nav:focus,
+Screen.-ascii #playlist-table:focus, Screen.-ascii #liked-table:focus,
+Screen.-ascii #downloads-table:focus, Screen.-ascii #recent-table:focus,
+Screen.-ascii #settings:focus {
+    border: ascii $primary;
+}
+
+Screen.-ascii #header-brand {
+    display: block;
+}
+
+/* Compact booth: stack the queue under the deck instead of hiding it. */
+Screen.-compact #booth-view {
+    layout: vertical;
+}
+
+Screen.-compact #booth-main {
+    height: auto;
+}
+
+Screen.-compact #booth-queue-panel {
+    display: block;
+    width: 1fr;
+    height: 1fr;
+    min-height: 4;
+    margin: 1 0 0 0;
+}
+
+Screen.-tiny #booth-queue-panel {
+    display: none;
+}
+
+/* ---------------------------------------------- playlist shuffle actions */
+
+Button.action {
+    margin-left: 1;
+    min-width: 11;
+    color: $secondary;
+    background: $panel;
+    text-style: bold;
+}
+
+Button.action:hover {
+    background: $panel-lighten-1;
+    color: $foreground;
+}
+
+Button.action:focus {
+    background: $secondary;
+    color: $background;
+}
+
+Button.action.-active {  /* while pressed */
+    background: $primary;
+    color: $background;
+}
+
+#playlist-actions {
+    height: 1;
+    margin-bottom: 1;
+    padding: 0 1;
+}
+
+#playlist-heading {
+    width: 1fr;
+    height: 1;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+#booth-source {
+    display: none;
+    height: 1;
+    padding: 0 1;
+}
+
+#booth-source.-visible {
+    display: block;
+}
+
+#source-label {
+    width: 1fr;
+    height: 1;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ------------------------------------------------------------ party mode */
+
+#party-toggle {
+    margin: 1 2 0 0;
+    min-width: 17;
+    color: $text-muted;
+    background: $panel;
+    text-style: bold;
+}
+
+#party-toggle:hover {
+    color: $foreground;
+    background: $panel-lighten-1;
+}
+
+#party-toggle:focus {
+    color: $background;
+    background: $primary;
+}
+
+#party-toggle.-on {
+    color: $secondary;
+}
+
+#party-toggle.-on:focus {
+    color: $background;
+    background: $secondary;
+}
+
+Screen.-compact #party-toggle {
+    margin-top: 0;
+}
+
+Screen.-xnarrow #party-toggle {
+    display: none;
+}
+
+/* The light strip uses the deck's top margin, so the layout never moves. */
+#party-lights {
+    display: none;
+    height: 1;
+}
+
+Screen.-party #party-lights {
+    display: block;
+}
+
+Screen.-party #deck {
+    margin-top: 0;
+}
+
+Screen.-compact #party-lights, Screen.-tiny #party-lights {
+    display: none;
+}

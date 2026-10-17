@@ -1,0 +1,38 @@
+{
+  "name": "pixelfm",
+  "version": "2.1.0",
+  "description": "PixelFM: a cyberpunk DJ booth for your terminal. Search and play YouTube audio with real-time meters. Installs the `ytm` command.",
+  "license": "MIT",
+  "keywords": [
+    "music",
+    "youtube",
+    "terminal",
+    "tui",
+    "player",
+    "dj",
+    "cli"
+  ],
+  "bin": {
+    "ytm": "bin/ytm.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "python/requirements.lock",
+    "python/*.whl",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "scripts": {
+    "build:wheel": "node scripts/build-wheel.js",
+    "prepack": "node scripts/build-wheel.js",
+    "test": "node --test test/launcher.test.js"
+  }
+}
