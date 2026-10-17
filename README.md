@@ -15,7 +15,7 @@ measurements. The blue/steel colours come from that cover.*
 
 Built with [Textual](https://textual.textualize.io/),
 [yt-dlp](https://github.com/yt-dlp/yt-dlp), and FFmpeg's `ffplay`. Launch it
-with **`ytm`**.
+with **`party`**.
 
 ---
 
@@ -82,13 +82,13 @@ PixelFM won't pretend otherwise.
 | Node.js **18+** | only for the npm install | `brew install node` | your distro or nodejs.org |
 
 PixelFM never installs system software or runs privileged commands. It tells
-you what is missing (`ytm --check`, and a checklist on first launch).
+you what is missing (`party --check`, and a checklist on first launch).
 
 ### Recommended: npm
 
 ```bash
 npm install -g pixelfm
-ytm
+party
 ```
 
 This is **not** a fully self-contained installer. Here is exactly what
@@ -97,7 +97,7 @@ happens:
 1. `npm install -g pixelfm` installs a small Node.js launcher plus the PixelFM
    Python wheel. The package has no npm dependencies and runs no install
    scripts.
-2. The **first** `ytm` finds Python 3.12+ on your PATH (3.13, then 3.12, then
+2. The **first** `party` finds Python 3.12+ on your PATH (3.13, then 3.12, then
    3.14, then `python3`; override with `PIXELFM_PYTHON=/path/to/python`). It
    creates a private virtual environment and installs the bundled wheel with
    the **exact dependency versions** pinned in `python/requirements.lock` from
@@ -113,12 +113,12 @@ on macOS and `~/.local/share/pixelfm/runtime` on Linux (override with
 Launcher-only commands:
 
 ```bash
-ytm --runtime-info       # where the environment is, Python version, ffplay
-ytm --update-ytdlp       # update yt-dlp inside PixelFM's environment
-ytm --reinstall-runtime  # rebuild the environment from the bundled wheel
+party --runtime-info       # where the environment is, Python version, ffplay
+party --update-ytdlp       # update yt-dlp inside PixelFM's environment
+party --reinstall-runtime  # rebuild the environment from the bundled wheel
 ```
 
-If `ytm` is "command not found", npm's global bin folder isn't on your PATH.
+If `party` is "command not found", npm's global bin folder isn't on your PATH.
 `npm prefix -g` shows the prefix; add `<prefix>/bin` to `PATH` in `~/.zshrc`
 yourself. PixelFM doesn't edit shell files.
 
@@ -130,15 +130,18 @@ yourself. PixelFM doesn't edit shell files.
 
 ```bash
 pipx install /path/to/ytm   # from a source checkout
-ytm
+party
 ```
 
 ### Upgrade
 
 ```bash
 npm install -g pixelfm@latest   # the private environment rebuilds itself on next run
-ytm --update-ytdlp              # when YouTube changes break playback, update yt-dlp first
+party --update-ytdlp            # when YouTube changes break playback, update yt-dlp first
 ```
+
+Up to 2.1.0 the command was called `ytm`; from 2.1.1 it is `party`. Upgrading
+removes the old `ytm` command.
 
 Your library, downloads, and settings are kept across upgrades. Database
 upgrades write a backup first (see [Your data](#your-data)).
@@ -159,14 +162,14 @@ folders under [Your data](#your-data) if you want a clean slate.
 ## Usage
 
 ```bash
-ytm                      # the DJ booth
-ytm --mock               # offline sample catalogue, simulated engine (labelled as such)
-ytm --art glyph          # artwork style: color | mono | glyph
-ytm --layout compact     # auto | full | compact
-ytm --effects reduced    # auto | full | reduced
-ytm --no-color           # monochrome (same as NO_COLOR=1)
-ytm --check              # dependency check and every storage path
-ytm --version
+party                    # the DJ booth
+party --mock             # offline sample catalogue, simulated engine (labelled as such)
+party --art glyph        # artwork style: color | mono | glyph
+party --layout compact   # auto | full | compact
+party --effects reduced  # auto | full | reduced
+party --no-color         # monochrome (same as NO_COLOR=1)
+party --check            # dependency check and every storage path
+party --version
 ```
 
 Press **2** (or **/**) to search, **enter** to play, **1** to come back to the
@@ -450,7 +453,7 @@ Everything is local; no account or cloud service is involved.
 | Log | `~/Library/Logs/PixelFM/pixelfm.log` | `~/.local/state/pixelfm/pixelfm.log` |
 | Config you edit (optional) | `~/.config/pixelfm/config.toml` | same |
 
-`ytm --check` prints the exact paths. Overrides: `PIXELFM_DATA_DIR`,
+`party --check` prints the exact paths. Overrides: `PIXELFM_DATA_DIR`,
 `PIXELFM_DOWNLOADS_DIR`, `PIXELFM_CACHE_DIR`, `PIXELFM_LOG_FILE`,
 `PIXELFM_CONFIG`, `PIXELFM_RUNTIME_DIR`.
 
@@ -499,21 +502,21 @@ search_timeout = 20
 
 | Problem | Fix |
 | --- | --- |
-| `ytm: PixelFM needs Python 3.12 or newer` | Install Python (table above), or set `PIXELFM_PYTHON=/path/to/python3.12`. |
+| `party: PixelFM needs Python 3.12 or newer` | Install Python (table above), or set `PIXELFM_PYTHON=/path/to/python3.12`. |
 | "venv/ensurepip missing" | Debian/Ubuntu: `sudo apt install python3.12-venv` (or `python3-venv`). |
-| First run fails while installing | It needs internet once. The message shows pip's last lines. Retry, or `ytm --reinstall-runtime`. |
-| `ytm: command not found` | Add npm's global bin (`$(npm prefix -g)/bin`) to PATH. |
+| First run fails while installing | It needs internet once. The message shows pip's last lines. Retry, or `party --reinstall-runtime`. |
+| `party: command not found` | Add npm's global bin (`$(npm prefix -g)/bin`) to PATH. |
 | "ffplay not found" | `brew install ffmpeg` / `sudo apt install ffmpeg`, or set `ffplay_path`. Search works meanwhile. |
-| Many tracks fail, "Sign in to confirm", "No playable audio format" | `ytm --update-ytdlp`. PixelFM never bypasses sign-in, age, or region checks, so some videos can't play. |
+| Many tracks fail, "Sign in to confirm", "No playable audio format" | `party --update-ytdlp`. PixelFM never bypasses sign-in, age, or region checks, so some videos can't play. |
 | Meters say NO MEASUREMENTS | Your FFmpeg build lacks `astats`/`ametadata`; PixelFM fell back to plain playback (see the log). |
 | Meters say SIMULATED ENGINE | You're in `--mock` mode: there is no audio to measure. |
 | A download fails | The status bar shows why. Live streams can't be saved, and protected videos fail by design. |
 | Downloads show MISSING | The file moved or was deleted. `L` relinks it, `X` removes stale entries. |
-| Colours look wrong | Try `color = "256"`, `ytm --no-color`, or `unicode = "never"`. A fixed theme (Settings → Theme) stops the colours following the artwork. |
+| Colours look wrong | Try `color = "256"`, `party --no-color`, or `unicode = "never"`. A fixed theme (Settings → Theme) stops the colours following the artwork. |
 | Party Mode won't start | It needs full effects: Settings → Effects → `full` (macOS *Reduce motion* makes `auto` reduced), and no `NO_COLOR`. |
 | "Couldn't resume …" after a restart | The video became unavailable or the network is down. The queue is kept: `space` retries, `n` skips. |
 | Garbled terminal after `kill -9` | Run `reset`. Normal exits restore the terminal. |
-| Anything else | `~/Library/Logs/PixelFM/pixelfm.log`; for more detail `PIXELFM_LOG_LEVEL=DEBUG ytm`. |
+| Anything else | `~/Library/Logs/PixelFM/pixelfm.log`; for more detail `PIXELFM_LOG_LEVEL=DEBUG party`. |
 
 ## Known limitations
 
@@ -559,8 +562,8 @@ search_timeout = 20
 
 ## Manual check: real audio
 
-1. `ytm --check` shows everything `ok`.
-2. Run `ytm`, press `2`, search `daft punk around the world`, press `enter`,
+1. `party --check` shows everything `ok`.
+2. Run `party`, press `2`, search `daft punk around the world`, press `enter`,
    then `1`. You hear audio, the deck says PLAYING, the timeline advances in
    step, and the L/R meters and bands move with the music.
 3. Press `}` three times. After a short rebuffer the bass is clearly louder,
@@ -573,7 +576,7 @@ search_timeout = 20
    press `6`. Turn Wi-Fi off and play it: the header says LOCAL FILE and the
    audio plays.
 7. Queue a few tracks, play one to about a minute, and quit with `ctrl+c`.
-   Run `ytm` again. The same queue appears, the deck shows **PAUSED · restored
+   Run `party` again. The same queue appears, the deck shows **PAUSED · restored
    at m:ss**, nothing plays, and `space` resumes from that point.
 8. Press `4`, highlight a playlist, and press `Z`. The queue shows the
    playlist in a new order and it starts playing; the playlist itself keeps
@@ -597,7 +600,7 @@ python -m pixelfm --mock  # run from source with sample data
 Layout:
 
 ```
-bin/ytm.js, lib/launcher.js   npm launcher (private venv, signals, diagnostics)
+bin/party.js, lib/launcher.js   npm launcher (private venv, signals, diagnostics)
 python/requirements.lock      exact runtime dependency versions for the launcher
 src/pixelfm/
   app.py                      Textual app: composition, playback flow, queue

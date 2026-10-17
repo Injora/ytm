@@ -196,7 +196,7 @@ class WelcomeScreen(ModalScreen[None]):
             if ready
             else "[$warning]Search works now; audio needs the missing tools above.\n"
             "PixelFM never installs software itself. Run "
-            "[b]ytm --check[/b] after installing.[/]"
+            "[b]party --check[/b] after installing.[/]"
         )
         where = "\n".join(
             f"  [$text-muted]{escape(label):<9}[/] {escape(path)}"

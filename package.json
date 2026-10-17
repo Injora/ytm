@@ -1,7 +1,7 @@
 {
   "name": "pixelfm",
-  "version": "2.1.0",
-  "description": "PixelFM: a cyberpunk DJ booth for your terminal. Search and play YouTube audio with real-time meters. Installs the `ytm` command.",
+  "version": "2.1.1",
+  "description": "PixelFM: a cyberpunk DJ booth for your terminal. Search and play YouTube audio with real-time meters. Installs the `party` command.",
   "license": "MIT",
   "keywords": [
     "music",
@@ -13,7 +13,7 @@
     "cli"
   ],
   "bin": {
-    "ytm": "bin/ytm.js"
+    "party": "bin/party.js"
   },
   "files": [
     "bin/",

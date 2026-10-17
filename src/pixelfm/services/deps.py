@@ -106,7 +106,7 @@ def startup_warnings(which: Which = shutil.which, ffplay: str = "ffplay") -> lis
 
 
 def format_report(deps: list[Dependency]) -> str:
-    """Human-readable report for ``ytm --check``."""
+    """Human-readable report for ``party --check``."""
     lines = ["PixelFM dependency check", ""]
     for dep in deps:
         mark = "ok " if dep.found else "MISSING"

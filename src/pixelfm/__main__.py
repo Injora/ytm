@@ -1,4 +1,4 @@
-"""Entry point for ``python -m pixelfm`` and the ``ytm`` console script."""
+"""Entry point for ``python -m pixelfm`` and the ``party`` console script."""
 
 from __future__ import annotations
 
@@ -22,7 +22,9 @@ log = logging.getLogger("pixelfm")
 
 def main(argv: list[str] | None = None) -> int:
     """Parse arguments, run the app, and always stop audio on the way out."""
-    parser = argparse.ArgumentParser(prog="ytm", description="PixelFM terminal player")
+    parser = argparse.ArgumentParser(
+        prog="party", description="PixelFM terminal player"
+    )
     parser.add_argument(
         "--mock", action="store_true", help="offline sample data, simulated playback"
     )

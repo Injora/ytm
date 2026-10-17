@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// `ytm`: start PixelFM. The work happens in ../lib/launcher.js.
+// `party`: start PixelFM. The work happens in ../lib/launcher.js.
 require('../lib/launcher.js')
   .main(process.argv.slice(2))
   .then((code) => {
