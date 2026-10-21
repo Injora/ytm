@@ -1,4 +1,4 @@
-"""DJ booth behaviour: deck rendering, transport, visualizer, and mixer."""
+"""DJ booth behaviour: deck rendering, transport, visualizer, mixer, lyrics."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ import time
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
+from textual import work
 from textual.markup import escape
 
 from pixelfm.services.downloads import DownloadStatus, eligible_for_download
@@ -15,6 +16,7 @@ from pixelfm.widgets import (
     BoothHeader,
     Fader,
     LevelMeter,
+    LyricsView,
     Spectrum,
     StatusLevel,
     StereoMeter,
@@ -29,6 +31,8 @@ if TYPE_CHECKING:
 FX_STEP = 2
 #: Seconds the meters keep falling after playback stops, then the timer sleeps.
 DECAY_SECONDS = 1.5
+#: Light each lyric line this many seconds early; positions arrive ~4x a second.
+LYRICS_LEAD = 0.25
 
 
 class BoothMixin:
@@ -140,6 +144,7 @@ class BoothMixin:
         timeline.duration = float(state.duration or (song.duration if song else 0) or 0)
         timeline.active = state.status is PlaybackStatus.PLAYING
         timeline.seekable = state.can_seek
+        self._render_lyrics(song, timeline.position, timeline.duration)
         self._render_transport(state, song)
         self._render_header(state)
 
@@ -281,6 +286,34 @@ class BoothMixin:
             "Meters on." if self.visualizer else "Meters off."
         )
         self._refresh_settings()
+
+    # ----------------------------------------------------------- lyrics
+
+    def _render_lyrics(
+        self, song: Song | None, position: float, duration: float
+    ) -> None:
+        view = self.query_one("#lyrics", LyricsView)
+        song_id = song.id if song is not None else None
+        if song_id != self._lyrics_song:
+            self._lyrics_song = song_id
+            view.show(None)
+            view.border_title = "lyrics"
+            if song is not None:
+                self.load_lyrics(song)
+            return
+        view.follow(position + LYRICS_LEAD, duration)
+
+    @work(exclusive=True, group="lyrics")
+    async def load_lyrics(self, song: Song) -> None:
+        view = self.query_one("#lyrics", LyricsView)
+        view.border_title = "lyrics · searching"
+        lyrics = await self.lyrics.lyrics_for(song)
+        if self._lyrics_song != song.id:
+            return  # a different track was loaded meanwhile
+        unsynced = lyrics is not None and not lyrics.synced
+        view.border_title = "lyrics · unsynced" if unsynced else "lyrics"
+        view.show(lyrics)
+        self._render_deck(self.playback)  # jump to the line being sung now
 
     # ------------------------------------------------------------ mixer
 

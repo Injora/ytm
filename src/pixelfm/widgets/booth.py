@@ -1,4 +1,5 @@
-"""DJ booth widgets: header, deck timeline, transport, meters, spectrum, mixer.
+"""DJ booth widgets: header, deck timeline, transport, meters, spectrum, mixer,
+lyrics.
 
 Meter widgets only ever display measurements handed to them. Smoothing
 (fall-off and peak hold) is a display convention applied to real values; when
@@ -11,6 +12,7 @@ import time
 from collections.abc import Sequence
 from dataclasses import dataclass
 
+from rich.cells import cell_len, set_cell_size
 from textual import events
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -23,6 +25,7 @@ from textual.widgets import Button, Static
 
 from pixelfm import __version__
 from pixelfm.models import format_duration
+from pixelfm.services.lyrics import Lyrics
 from pixelfm.services.metering import BAND_LABELS, SILENCE_DB, StereoLevel
 from pixelfm.styles import Glyphs
 from pixelfm.widgets.brand import logo_markup
@@ -531,3 +534,54 @@ class Toggle(Widget, can_focus=True):
 
     def on_click(self) -> None:
         self.action_flip()
+
+
+# ------------------------------------------------------------------ lyrics
+
+
+class LyricsView(Widget):
+    """Lyrics that follow the track: the sung line lit, centred when it can be.
+
+    Shows nothing at all when the track has no lyrics.
+    """
+
+    def __init__(self, unicode: bool = True, *, id: str | None = None) -> None:
+        super().__init__(id=id)
+        self._unicode = unicode
+        self._lyrics: Lyrics | None = None
+        self._index = -1
+
+    def show(self, lyrics: Lyrics | None) -> None:
+        self._lyrics, self._index = lyrics, -1
+        self.refresh()
+
+    def follow(self, position: float, duration: float) -> None:
+        """Move to the line at ``position``; redraws only when it changes."""
+        if self._lyrics is None:
+            return
+        index = self._lyrics.index_at(position, duration)
+        if index != self._index:
+            self._index = index
+            self.refresh()
+
+    def render(self) -> str:
+        lyrics = self._lyrics
+        height, width = self.content_size.height, self.content_size.width
+        if lyrics is None or height <= 0 or width <= 0:
+            return ""
+        gap = "♪" if self._unicode else "~"
+        current = max(0, self._index)
+        top = max(0, min(current - height // 2, len(lyrics.lines) - height))
+        rows = []
+        for i, line in enumerate(lyrics.lines[top : top + height], start=top):
+            text = line.text or gap
+            if cell_len(text) > width:
+                text = set_cell_size(text, width - 1) + ("…" if self._unicode else "~")
+            text = escape(text)
+            if i == self._index:
+                rows.append(f"[b $primary]{text}[/]")
+            elif abs(i - self._index) == 1 and self._index >= 0:
+                rows.append(text)
+            else:
+                rows.append(f"[$text-muted]{text}[/]")
+        return "\n".join(rows)

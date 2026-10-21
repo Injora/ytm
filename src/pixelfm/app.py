@@ -50,6 +50,7 @@ from pixelfm.services.library import (
     LibraryTrack,
     is_placeholder,
 )
+from pixelfm.services.lyrics import LyricsService
 from pixelfm.services.media_session import MediaSession, NowPlayingInfo, helper_path
 from pixelfm.services.palette import DEFAULT_PALETTE, Palette, PaletteService
 from pixelfm.services.party import PartyMode, RavePattern
@@ -81,6 +82,7 @@ from pixelfm.widgets import (
     LevelMeter,
     LightBar,
     LikedTable,
+    LyricsView,
     Marks,
     NowPlaying,
     PlaylistNav,
@@ -224,6 +226,7 @@ class PixelFMApp(
         media: MediaSession | bool | None = True,
         token_store: Any = None,
         spotify_options: dict[str, Any] | None = None,
+        lyrics: LyricsService | None = None,
     ) -> None:
         super().__init__()
         self.config = config or Config()
@@ -250,6 +253,8 @@ class PixelFMApp(
             disk=DiskCache(cache_dir() / "thumbnails")
         )
         self.palettes = PaletteService(self.artwork)
+        self.lyrics = lyrics or LyricsService(disk=DiskCache(cache_dir() / "lyrics"))
+        self._lyrics_song: str | None = None  # id of the song the lyrics are for
         self.player = player or self._build_player()
         kwargs = {"downloader": downloader} if downloader else {}
         self.downloads = DownloadManager(
@@ -453,6 +458,7 @@ class PixelFMApp(
                             )
                             yield Toggle("NORM", id="toggle-norm")
                             yield Static(id="mixer-status")
+                            yield LyricsView(u, id="lyrics")
                     yield Static(id="mixer-compact")
                 with Vertical(id="booth-queue-panel"):
                     with Horizontal(id="booth-source"):
@@ -559,6 +565,7 @@ class PixelFMApp(
         self.query_one("#deck").border_title = "deck a"
         self.query_one("#signal").border_title = "signal · measured"
         self.query_one("#mixer").border_title = "mixer"
+        self.query_one("#lyrics").border_title = "lyrics"
         self.screen.add_class("-booth")
 
         self._fx_timer = self.set_interval(1 / 15, self._fx_tick, pause=True)

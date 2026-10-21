@@ -59,3 +59,14 @@ def image_bytes(
     buffer = io.BytesIO()
     image.save(buffer, format=fmt)
     return buffer.getvalue()
+
+
+@pytest.fixture(autouse=True)
+def no_lyrics_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The default lyrics service finds nothing instead of asking LRCLIB."""
+    from pixelfm.services import lyrics
+
+    def offline(url: str, timeout: float = 8.0) -> None:
+        raise lyrics.LyricsError("offline in tests")
+
+    monkeypatch.setattr(lyrics, "fetch_json", offline)

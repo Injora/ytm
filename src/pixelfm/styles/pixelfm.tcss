@@ -235,6 +235,14 @@ Fader:focus, Toggle:focus {
     height: auto;
 }
 
+#lyrics {
+    height: 1fr;
+    min-height: 0;
+    border-top: solid $border-blurred;
+    border-title-color: $text-muted;
+    border-title-style: bold;
+}
+
 #mixer-compact {
     display: none;
     height: 1;
@@ -576,6 +584,10 @@ Screen.-ascii #playlist-table:focus, Screen.-ascii #liked-table:focus,
 Screen.-ascii #downloads-table:focus, Screen.-ascii #recent-table:focus,
 Screen.-ascii #settings:focus {
     border: ascii $primary;
+}
+
+Screen.-ascii #lyrics {
+    border-top: ascii $border-blurred;
 }
 
 Screen.-ascii #header-brand {
