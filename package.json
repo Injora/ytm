@@ -1,6 +1,6 @@
 {
   "name": "pixelfm",
-  "version": "2.3.1",
+  "version": "2.4.0",
   "description": "PixelFM: a cyberpunk DJ booth for your terminal. Search and play YouTube audio with real-time meters. Installs the `pixelfm` command (and its short form `pfm`).",
   "license": "MIT",
   "repository": {

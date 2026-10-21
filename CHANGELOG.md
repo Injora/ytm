@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.4.0
+
+**New**
+- **Live lyrics** under the mixer in the booth: the line being sung is lit
+  and follows the track. Time-synced lyrics come from
+  [LRCLIB](https://lrclib.net) (free, no account); plain lyrics, when that's
+  all there is, scroll through the song and are marked "unsynced". Tracks
+  without lyrics leave the panel blank. The lookup starts only once the
+  track is playing, so it never slows loading. Found lyrics are cached.
+- `y` turns lyrics on and off (also in Settings). When off, nothing is sent
+  to LRCLIB.
+
 ## 2.3.1
 
 - The colour (pixelated) cover is always the default. The artwork style

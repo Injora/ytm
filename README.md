@@ -352,7 +352,7 @@ mouse. The mouse also works: click buttons, the timeline, and faders.
 
 **Display and app:** `P` Party Mode on/off · `R` RAVE MODE on, then next
 pattern · `I` import a playlist · `m` artwork style · `v`
-full/compact layout · `V` meters on/off · `?` help · `q`, `ctrl+c`, or `ctrl+q`
+full/compact layout · `V` meters on/off · `y` lyrics on/off · `?` help · `q`, `ctrl+c`, or `ctrl+q`
 quit (the session is saved first).
 
 ---

@@ -48,7 +48,7 @@ PixelFM runs on **macOS** and **Linux**. It doesn't run on Windows yet.
    npm install -g pixelfm
    ```
    (Until PixelFM is published on npm, install the package file you were
-   given instead: `npm install -g ./pixelfm-2.3.1.tgz`. See
+   given instead: `npm install -g ./pixelfm-2.4.0.tgz`. See
    [Share PixelFM with a friend](#share-pixelfm-with-a-friend).)
 4. **Start it:**
    ```sh
@@ -516,12 +516,12 @@ Until PixelFM is published on npm, send the package file:
    cd ~/ytm
    npm pack
    ```
-   This makes `pixelfm-2.3.1.tgz`.
+   This makes `pixelfm-2.4.0.tgz`.
 2. **Send** that file to your friend.
 3. **Your friend** installs Python 3.12+ and Node.js (see
    [Install PixelFM](#install-pixelfm)), then runs:
    ```sh
-   npm install -g ./pixelfm-2.3.1.tgz
+   npm install -g ./pixelfm-2.4.0.tgz
    pixelfm
    ```
    On the first start PixelFM offers to install FFmpeg (and Tesseract on
