@@ -144,7 +144,7 @@ class BoothMixin:
         timeline.duration = float(state.duration or (song.duration if song else 0) or 0)
         timeline.active = state.status is PlaybackStatus.PLAYING
         timeline.seekable = state.can_seek
-        self._render_lyrics(song, timeline.position, timeline.duration)
+        self._render_lyrics(song, timeline.position, timeline.duration, timeline.active)
         self._render_transport(state, song)
         self._render_header(state)
 
@@ -290,18 +290,32 @@ class BoothMixin:
     # ----------------------------------------------------------- lyrics
 
     def _render_lyrics(
-        self, song: Song | None, position: float, duration: float
+        self, song: Song | None, position: float, duration: float, playing: bool
     ) -> None:
         view = self.query_one("#lyrics", LyricsView)
-        song_id = song.id if song is not None else None
+        song_id = song.id if song is not None and self.lyrics_on else None
         if song_id != self._lyrics_song:
-            self._lyrics_song = song_id
+            self._lyrics_song, self._lyrics_asked = song_id, False
             view.show(None)
-            view.border_title = "lyrics"
-            if song is not None:
+            view.border_title = "lyrics" if self.lyrics_on else "lyrics · off (y)"
+        if song is None or song_id is None:
+            return
+        if not self._lyrics_asked:
+            # Wait for the audio: the lookup never competes with loading it.
+            if playing:
+                self._lyrics_asked = True
                 self.load_lyrics(song)
             return
         view.follow(position + LYRICS_LEAD, duration)
+
+    def action_toggle_lyrics(self) -> None:
+        self.lyrics_on = not self.lyrics_on
+        self._save_pref("lyrics", self.lyrics_on)
+        self._render_deck(self.playback)
+        self.query_one("StatusBar").show(
+            "Lyrics on." if self.lyrics_on else "Lyrics off."
+        )
+        self._refresh_settings()
 
     @work(exclusive=True, group="lyrics")
     async def load_lyrics(self, song: Song) -> None:

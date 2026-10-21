@@ -199,6 +199,7 @@ class PixelFMApp(
         Binding("m", "cycle_artwork", "Art", show=False),
         Binding("v", "toggle_layout", "Layout", show=False),
         Binding("V", "toggle_visualizer", "Meters", show=False),
+        Binding("y", "toggle_lyrics", "Lyrics", show=False),
         Binding("question_mark", "help", "Help", key_display="?"),
         Binding("escape", "back", "Back", show=False),
         Binding("q", "quit", "Quit"),
@@ -255,6 +256,8 @@ class PixelFMApp(
         self.palettes = PaletteService(self.artwork)
         self.lyrics = lyrics or LyricsService(disk=DiskCache(cache_dir() / "lyrics"))
         self._lyrics_song: str | None = None  # id of the song the lyrics are for
+        self._lyrics_asked = False  # fetched only once the song plays
+        self.lyrics_on = self._pref("lyrics", True) is not False
         self.player = player or self._build_player()
         kwargs = {"downloader": downloader} if downloader else {}
         self.downloads = DownloadManager(

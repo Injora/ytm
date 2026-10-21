@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from urllib.parse import parse_qs, urlparse
 
+from textual.widgets import Input
+
 from pixelfm.models import Song
 from pixelfm.services.cache import DiskCache
 from pixelfm.services.lyrics import (
@@ -13,6 +15,8 @@ from pixelfm.services.lyrics import (
     parse_lrc,
     queries,
 )
+from pixelfm.services.playback import SimulatedPlayer
+from pixelfm.state import PlaybackStatus
 from pixelfm.widgets import LyricsView
 from tests.conftest import make_song
 from tests.test_booth import load_and_play, make_app, until
@@ -153,3 +157,34 @@ async def test_booth_lyrics_stay_blank_without_lyrics() -> None:
         view = app.query_one("#lyrics", LyricsView)
         assert view.render() == ""
         assert view.border_title == "lyrics"
+
+
+async def test_lyrics_wait_until_the_track_plays() -> None:
+    fake = FakeLrclib(get={"syncedLyrics": LRC})
+    app = make_app(lyrics=LyricsService(fake), player=SimulatedPlayer(load_delay=0.5))
+    async with app.run_test(size=(140, 46)) as pilot:
+        await pilot.press("slash")
+        app.query_one("#search", Input).value = "x"
+        await pilot.press("enter")
+        await app.workers.wait_for_complete()
+        await pilot.press("enter")
+        await until(lambda: app.playback.status is PlaybackStatus.LOADING, pilot)
+        assert fake.urls == []  # nothing asked while the audio loads
+        await until(lambda: app.playback.status is PlaybackStatus.PLAYING, pilot)
+        await until(lambda: fake.urls != [], pilot)
+
+
+async def test_y_turns_lyrics_off_and_on() -> None:
+    fake = FakeLrclib(get={"syncedLyrics": LRC})
+    app = make_app(lyrics=LyricsService(fake))
+    async with app.run_test(size=(140, 46)) as pilot:
+        view = app.query_one("#lyrics", LyricsView)
+        await load_and_play(app, pilot)
+        await until(lambda: view._lyrics is not None, pilot)
+        await pilot.press("y")
+        assert not app.lyrics_on and app.library.get_pref("lyrics") is False
+        assert view._lyrics is None and view.border_title == "lyrics · off (y)"
+        await pilot.pause(0.6)
+        await pilot.press("y")
+        await until(lambda: view._lyrics is not None, pilot)
+        assert app.library.get_pref("lyrics") is True

@@ -141,6 +141,7 @@ HELP = """\
 
 [b $primary]Display[/]
   [b]m[/] artwork style   [b]v[/] full / compact layout   [b]V[/] meters on/off
+  [b]y[/] lyrics on/off (under the mixer; looked up once the track plays)
   [b]P[/] party mode on/off (style in Settings: ambient, pulse, strobe, rave)
   [b]R[/] RAVE MODE: on, then the next pattern (chase, dance floor, laser, bass, rainbow)
   Theme "music" (default) takes its colours from the current track's artwork.

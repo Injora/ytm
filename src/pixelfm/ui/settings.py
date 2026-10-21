@@ -68,6 +68,12 @@ class SettingsMixin:
             ("effects", "Effects", f"[b]{self._effects_mode}[/]{effects_note}", True),
             ("visualizer", "Meters & spectrum", on_off(self.visualizer), True),
             (
+                "lyrics",
+                "Lyrics",
+                f"{on_off(self.lyrics_on)} [$text-muted](y; from lrclib.net)[/]",
+                True,
+            ),
+            (
                 "artwork",
                 "Artwork style",
                 f"[b]{self.artwork_mode}[/] [$text-muted](m)[/]",
@@ -188,6 +194,9 @@ class SettingsMixin:
                 self._set_party(self.effects, save=False)
         elif key == "visualizer":
             self.action_toggle_visualizer()
+            return
+        elif key == "lyrics":
+            self.action_toggle_lyrics()
             return
         elif key == "artwork":
             modes = [m.value for m in ArtworkMode]
