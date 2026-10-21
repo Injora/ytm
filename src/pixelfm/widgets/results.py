@@ -238,6 +238,8 @@ class PlaylistTable(SongTable):
     BINDINGS = [
         Binding("enter", "select_cursor", "Play"),
         Binding("Z", "app.shuffle_playlist", "Shuffle"),
+        Binding("M", "app.review_matches", "Matches"),
+        Binding("X", "app.stop_matching", "Stop matching", show=False),
         Binding("d,delete", "app.playlist_remove_track", "Remove"),
         Binding("K,shift+up", "app.playlist_move(-1)", "Up"),
         Binding("J,shift+down", "app.playlist_move(1)", "Down"),

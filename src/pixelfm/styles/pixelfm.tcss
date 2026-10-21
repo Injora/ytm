@@ -712,3 +712,54 @@ Screen.-party #deck {
 Screen.-compact #party-lights, Screen.-tiny #party-lights {
     display: none;
 }
+
+/* ------------------------------------------------------------ cover art */
+
+AlbumArt > .cover-text, AlbumArt > .cover-image {
+    width: 100%;
+    height: 100%;
+}
+
+AlbumArt > .cover-image, AlbumArt.-image > .cover-text {
+    display: none;
+}
+
+AlbumArt.-image > .cover-image {
+    display: block;
+}
+
+/* ------------------------------------------------------------- rave mode */
+
+/* The top light strip takes the header's top margin: nothing moves. */
+#top-lights {
+    display: none;
+    height: 1;
+    margin: 0 2;
+}
+
+Screen.-rave #top-lights {
+    display: block;
+}
+
+Screen.-rave #header {
+    margin-top: 0;
+}
+
+Screen.-compact #top-lights, Screen.-tiny #top-lights {
+    display: none;
+}
+
+/* ------------------------------------------------------- import dialogs */
+
+.dialog-buttons {
+    height: 1;
+    margin-top: 1;
+}
+
+.dialog.help OptionList {
+    max-height: 22;
+}
+
+.dialog.help Input {
+    margin-bottom: 1;
+}

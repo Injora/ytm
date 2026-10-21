@@ -248,3 +248,71 @@ async def test_service_timeout() -> None:
     finally:
         release.set()
     assert result.art.placeholder and result.error == "thumbnail download timed out"
+
+
+# ------------------------------------------------- real cover images
+
+
+async def test_real_cover_shown_where_the_terminal_draws_images() -> None:
+    from textual_image.widget import UnicodeImage
+
+    from pixelfm.app import PixelFMApp
+    from pixelfm.config import Config
+    from pixelfm.services.library import Library
+    from pixelfm.services.playback import SimulatedPlayer
+    from pixelfm.widgets import AlbumArt
+
+    song, broken = make_song(1), make_song(2)
+
+    def fetch(url: str) -> bytes:
+        if url == broken.thumbnail_url:
+            raise OSError("offline")
+        return image_bytes(size=(320, 180))
+
+    app = PixelFMApp(
+        config=Config(),
+        artwork=ArtworkService(fetch),
+        player=SimulatedPlayer(load_delay=0),
+        library=Library.memory(),
+        unicode=True,
+        truecolor=True,
+        welcome=False,
+        image_widget=UnicodeImage,  # stands in for the Sixel/Kitty widgets
+    )
+
+    async def until(condition) -> None:  # type: ignore[no-untyped-def]
+        for _ in range(150):
+            if condition():
+                return
+            await pilot.pause(0.02)
+        raise AssertionError("condition not reached")
+
+    async with app.run_test(size=(140, 42)) as pilot:
+        deck = app.query_one("#deck-art", AlbumArt)
+        assert deck.supports_images and deck.image is None
+        app._play_entry(app.queue.play_now(song))
+        await until(lambda: deck.has_class("-image"))
+        assert deck.image is not None
+        cell_w, cell_h = 10, 20  # textual-image's default when not probed
+        assert deck.image.size == (deck.art_width * cell_w, deck.art_height * cell_h)
+        await pilot.press("m")  # mono style: characters again
+        await until(lambda: not deck.has_class("-image"))
+        assert deck.image is None
+        await pilot.press("m", "m")  # glyph, then back to colour
+        await until(lambda: deck.has_class("-image"))
+        app._play_entry(app.queue.play_now(broken))  # no artwork: blocks
+        await until(lambda: not deck.has_class("-image"))
+        assert deck.art is not None and deck.art.placeholder
+
+
+def test_graphics_detection_respects_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+    from pixelfm.services import graphics
+
+    assert graphics.detect({"PIXELFM_GRAPHICS": "off"}) is None
+    assert graphics.detect({"NO_COLOR": "1"}) is None
+    assert graphics.detect({"PIXELFM_GRAPHICS": "kitty"}) == "kitty"
+    monkeypatch.setattr(graphics, "_is_tty", lambda: True)
+    # Terminal.app has no image protocol: never probe it.
+    assert graphics.detect({"TERM_PROGRAM": "Apple_Terminal"}) is None
+    monkeypatch.setattr(graphics, "_is_tty", lambda: False)
+    assert graphics.detect({}) is None  # not a terminal: never probe

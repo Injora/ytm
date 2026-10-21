@@ -1,10 +1,13 @@
-# PixelFM 2.1: a cyberpunk DJ booth for your terminal
+# PixelFM 2.3: a cyberpunk DJ booth for your terminal
 
-PixelFM is a full-screen terminal music player: detailed cover art, an interface
-that takes its colours from the artwork of whatever is playing, and real-time
-meters that measure the audio you are actually hearing. Search YouTube, build
-and shuffle playlists, like and download tracks you're allowed to keep, flip on
-Party Mode, and pick up exactly where you left off after a restart.
+PixelFM is a full-screen terminal music player: detailed cover art (the real
+picture in terminals that can draw images), an interface that takes its
+colours from the artwork of whatever is playing, and real-time meters that
+measure the audio you are actually hearing. Search YouTube, import playlists
+from Spotify or from screenshots of any song list, build and shuffle
+playlists, like and download tracks you're allowed to keep, flip on Party
+Mode or RAVE MODE, control it with your Mac's media keys, and pick up exactly
+where you left off after a restart.
 
 ![The DJ booth, playing a downloaded track](docs/screenshots/booth.svg)
 
@@ -15,7 +18,46 @@ measurements. The blue/steel colours come from that cover.*
 
 Built with [Textual](https://textual.textualize.io/),
 [yt-dlp](https://github.com/yt-dlp/yt-dlp), and FFmpeg's `ffplay`. Launch it
-with **`party`**.
+with **`pixelfm`**, or its short form **`pfm`** (both do the same).
+
+**New here?** The [Quick start](#quick-start) gets you playing in a few
+minutes; the **[user guide](docs/GUIDE.md)** shows how to do everything step
+by step. What changed: [CHANGELOG](CHANGELOG.md).
+
+---
+
+## Quick start
+
+**1. Install** (macOS or Linux; Windows isn't supported yet):
+
+```bash
+# macOS (with Homebrew from brew.sh)
+brew install python@3.13 node
+# Debian / Ubuntu
+sudo apt install python3.12 python3.12-venv nodejs npm
+
+npm install -g pixelfm
+```
+
+**2. Start it:**
+
+```bash
+pixelfm        # or: pfm
+```
+
+The first start sets up a private Python environment (about a minute) and
+offers to install FFmpeg (and, on Linux, Tesseract) if they are missing. It
+asks before installing anything.
+
+**3. Play something:** press `2`, type `daft punk around the world`, press
+`enter`, pick a result with the arrows, and press `enter` again. Press `1` for
+the booth, `space` to pause, `?` for every key, and `q` to quit; the next
+start picks up where you left off.
+
+**4. Bring your music:** press `4`, then `I`, and paste a Spotify playlist
+link, or drop screenshots of any song list on the terminal. See
+[Import a Spotify playlist](docs/GUIDE.md#import-a-spotify-playlist) and
+[Import songs from screenshots](docs/GUIDE.md#import-songs-from-screenshots).
 
 ---
 
@@ -41,8 +83,21 @@ with **`party`**.
   blue-and-grey covers give electric blue and steel, red/orange covers give
   crimson and amber, black-and-white covers give silver and graphite. Every
   text colour is checked for contrast, and changes crossfade.
-- **Party Mode** (`P`). Booth lighting in coordinated neons: ambient drift,
-  pulses that follow the *measured* loudness, or a rate-limited strobe.
+- **Party Mode** (`P`) and **RAVE MODE** (`R`). Booth lighting in
+  coordinated neons, from a slow ambient drift to a fast, screen-wide light
+  rig (about 16 fps) whose bass pulse follows the *measured* loudness.
+- **Spotify playlist import** (`I`). Paste a playlist link (or an export
+  file): PixelFM keeps the track list and order, matches each track to a
+  YouTube video, and lets you review every match.
+- **Import from screenshots** (`I`). Drop screenshots of any song list
+  (Spotify, Apple Music, YouTube Music, a phone) and PixelFM reads the songs
+  with your computer's own text recognition, then adds them to a new or an
+  existing playlist, skipping the songs that are already in it.
+- **macOS media controls.** Play/pause, next, and previous from the media
+  keys, headphones, and Control Centre, which also shows the track and cover.
+- **Real covers where possible.** Terminals with an image protocol (Kitty,
+  Ghostty, WezTerm, iTerm2 3.5+) show the actual cover; others get a
+  detailed block rendering.
 - **Library.** Playlists (create, rename, delete, reorder, filter, **shuffle**),
   Liked Songs (sort, filter), and Recently Played with play counts.
 - **Session recovery.** Quit, press `ctrl+c`, close the terminal, or crash.
@@ -65,8 +120,41 @@ PixelFM won't pretend otherwise.
 | ![Liked](docs/screenshots/liked.svg) | ![Downloads](docs/screenshots/downloads.svg) | ![Recent](docs/screenshots/recent.svg) |
 | **Settings** | **Compact layout (92×28)** | **Party Mode, compact** |
 | ![Settings](docs/screenshots/settings.svg) | ![Compact booth](docs/screenshots/compact-booth.svg) | ![Compact party](docs/screenshots/compact-party.svg) |
-| **Party Mode (ambient)** | **A shuffled playlist (teal cover)** | |
-| ![Party Mode](docs/screenshots/party.svg) | ![Shuffled playlist](docs/screenshots/booth-shuffled.svg) | |
+| **Party Mode (ambient)** | **A shuffled playlist (teal cover)** | **RAVE MODE (colour chase)** |
+| ![Party Mode](docs/screenshots/party.svg) | ![Shuffled playlist](docs/screenshots/booth-shuffled.svg) | ![RAVE](docs/screenshots/rave.svg) |
+| **RAVE across the search view** | **Importing a Spotify playlist** | **Reviewing YouTube matches** |
+| ![RAVE search](docs/screenshots/rave-search.svg) | ![Import preview](docs/screenshots/import-preview.svg) | ![Match review](docs/screenshots/match-review.svg) |
+
+| **Screenshot import: check the songs** | **Choose the playlist** | **Added, with repeats skipped** |
+| ![Screenshot review](docs/screenshots/screenshot-review.svg) | ![Choose a playlist](docs/screenshots/screenshot-target.svg) | ![Songs added](docs/screenshots/screenshot-added.svg) |
+
+A short recording of normal mode switching to RAVE (real frames of the
+running app, demo data): [docs/screenshots/rave-demo.gif](docs/screenshots/rave-demo.gif).
+
+## How to…
+
+Step-by-step instructions for each task are in the
+[user guide](docs/GUIDE.md).
+
+| I want to… | Do this | Guide |
+| --- | --- | --- |
+| Play a song | `2`, type, `enter`, pick a result, `enter` | [Play music](docs/GUIDE.md#play-music) |
+| Pause, skip, seek, change volume | `space` · `n`/`b` · `[`/`]` · `+`/`-` | [Play music](docs/GUIDE.md#play-music) |
+| Queue songs | `a` add · `A` play next · `3` see the queue | [Use the queue](docs/GUIDE.md#use-the-queue) |
+| Like a song | `f` · `5` to see liked songs | [Like songs](docs/GUIDE.md#like-songs) |
+| Make a playlist | `p` on a track → **+ New playlist…** | [Make and use playlists](docs/GUIDE.md#make-and-use-playlists) |
+| Shuffle a playlist | `4`, highlight it, `Z` | [Make and use playlists](docs/GUIDE.md#make-and-use-playlists) |
+| Import a Spotify playlist | `4`, `I`, paste the link, `m` | [Import a Spotify playlist](docs/GUIDE.md#import-a-spotify-playlist) |
+| Add songs from a screenshot | `4`, `I`, drop the screenshot, `enter`, check, choose a playlist | [Import songs from screenshots](docs/GUIDE.md#import-songs-from-screenshots) |
+| Fix a wrong YouTube match | `4`, highlight the playlist, `M`, `enter` on the track | [Review and fix matches](docs/GUIDE.md#review-and-fix-youtube-matches) |
+| Save a track for offline | `D` (only audio you may download) | [Downloads](docs/GUIDE.md#download-tracks-and-play-offline) |
+| Light up the screen | `P` Party Mode · `R` RAVE MODE | [Party Mode and RAVE MODE](docs/GUIDE.md#party-mode-and-rave-mode) |
+| Change colours, layout, cover style | `8` Settings · `v` layout · `m` cover style | [Change how it looks](docs/GUIDE.md#change-how-it-looks) |
+| Use the Mac's media keys | just press them while PixelFM runs | [Media keys](docs/GUIDE.md#control-it-from-your-macs-media-keys) |
+| Carry on after quitting | `q`, then `pixelfm` and `space` | [Quit and pick up](docs/GUIDE.md#quit-and-pick-up-where-you-left-off) |
+| Fix playback that stopped working | `pixelfm --update-ytdlp` | [Keep it working](docs/GUIDE.md#keep-it-working) |
+| Install missing FFmpeg / Tesseract | `pixelfm --install-deps` | [The first start](docs/GUIDE.md#the-first-start) |
+| Give PixelFM to a friend | `npm pack`, send the `.tgz` | [Share PixelFM](docs/GUIDE.md#share-pixelfm-with-a-friend) |
 
 ---
 
@@ -80,15 +168,35 @@ PixelFM won't pretend otherwise.
 | FFmpeg (`ffplay`) | plays audio | `brew install ffmpeg` | `sudo apt install ffmpeg` |
 | deno (or node/bun) | yt-dlp needs a JS runtime for YouTube | `brew install deno` | see [deno.land](https://deno.land) |
 | Node.js **18+** | only for the npm install | `brew install node` | your distro or nodejs.org |
+| Tesseract | reads songs from screenshots (optional) | not needed: built in | `sudo apt install tesseract-ocr` |
 
-PixelFM never installs system software or runs privileged commands. It tells
-you what is missing (`party --check`, and a checklist on first launch).
+**The npm launcher offers to install FFmpeg (and, on Linux, Tesseract).**
+On each start it checks for them, and if one is missing it says what it is
+for and asks before running your system's package manager:
+
+| System | What it checks | Installs with |
+| --- | --- | --- |
+| macOS | FFmpeg | Homebrew (`brew install ffmpeg`), or MacPorts |
+| Linux | FFmpeg, Tesseract | apt, dnf, pacman, zypper, or apk (`sudo` asks for your password) |
+| Windows | nothing: PixelFM doesn't run on Windows yet (it has its own text recognition) | |
+
+It never installs without a yes, never without a terminal (it prints the
+command instead), and never installs a package manager: on a Mac without
+Homebrew it points you to [brew.sh](https://brew.sh). A "no" is remembered
+until the next PixelFM version; `pixelfm --install-deps` asks again, and
+`PIXELFM_NO_INSTALL=1` turns the question off. FFmpeg isn't bundled in the
+npm package because ffplay needs the system's audio and SDL libraries (no
+dependable static build exists for Linux) and would add about 80 MB.
+
+Python and the app itself never install system software; `pixelfm --check`
+and the first-launch checklist show what is missing, with the command for
+your system.
 
 ### Recommended: npm
 
 ```bash
 npm install -g pixelfm
-party
+pixelfm
 ```
 
 This is **not** a fully self-contained installer. Here is exactly what
@@ -97,7 +205,7 @@ happens:
 1. `npm install -g pixelfm` installs a small Node.js launcher plus the PixelFM
    Python wheel. The package has no npm dependencies and runs no install
    scripts.
-2. The **first** `party` finds Python 3.12+ on your PATH (3.13, then 3.12, then
+2. The **first** `pixelfm` finds Python 3.12+ on your PATH (3.13, then 3.12, then
    3.14, then `python3`; override with `PIXELFM_PYTHON=/path/to/python`). It
    creates a private virtual environment and installs the bundled wheel with
    the **exact dependency versions** pinned in `python/requirements.lock` from
@@ -113,12 +221,13 @@ on macOS and `~/.local/share/pixelfm/runtime` on Linux (override with
 Launcher-only commands:
 
 ```bash
-party --runtime-info       # where the environment is, Python version, ffplay
-party --update-ytdlp       # update yt-dlp inside PixelFM's environment
-party --reinstall-runtime  # rebuild the environment from the bundled wheel
+pixelfm --runtime-info       # where the environment is, Python version, ffplay
+pixelfm --install-deps       # check FFmpeg (and Tesseract on Linux); offer to install
+pixelfm --update-ytdlp       # update yt-dlp inside PixelFM's environment
+pixelfm --reinstall-runtime  # rebuild the environment from the bundled wheel
 ```
 
-If `party` is "command not found", npm's global bin folder isn't on your PATH.
+If `pixelfm` is "command not found", npm's global bin folder isn't on your PATH.
 `npm prefix -g` shows the prefix; add `<prefix>/bin` to `PATH` in `~/.zshrc`
 yourself. PixelFM doesn't edit shell files.
 
@@ -130,18 +239,19 @@ yourself. PixelFM doesn't edit shell files.
 
 ```bash
 pipx install /path/to/ytm   # from a source checkout
-party
+pixelfm
 ```
 
 ### Upgrade
 
 ```bash
 npm install -g pixelfm@latest   # the private environment rebuilds itself on next run
-party --update-ytdlp            # when YouTube changes break playback, update yt-dlp first
+pixelfm --update-ytdlp          # when YouTube changes break playback, update yt-dlp first
 ```
 
-Up to 2.1.0 the command was called `ytm`; from 2.1.1 it is `party`. Upgrading
-removes the old `ytm` command.
+The command was called `ytm` up to 2.1.0 and `party` from 2.1.1; from 2.3.0
+it is `pixelfm`, with `pfm` as a short form. Upgrading removes the old
+command.
 
 Your library, downloads, and settings are kept across upgrades. Database
 upgrades write a backup first (see [Your data](#your-data)).
@@ -162,14 +272,16 @@ folders under [Your data](#your-data) if you want a clean slate.
 ## Usage
 
 ```bash
-party                    # the DJ booth
-party --mock             # offline sample catalogue, simulated engine (labelled as such)
-party --art glyph        # artwork style: color | mono | glyph
-party --layout compact   # auto | full | compact
-party --effects reduced  # auto | full | reduced
-party --no-color         # monochrome (same as NO_COLOR=1)
-party --check            # dependency check and every storage path
-party --version
+pixelfm                    # the DJ booth
+pixelfm --mock             # offline sample catalogue, simulated engine (labelled as such)
+pixelfm --art glyph        # artwork style: color | mono | glyph
+pixelfm --layout compact   # auto | full | compact
+pixelfm --effects reduced  # auto | full | reduced
+pixelfm --no-color         # monochrome (same as NO_COLOR=1)
+pixelfm --images off       # character covers only (auto | off | sixel | kitty)
+pixelfm --media-test       # macOS: check media keys / Control Centre for 60 s
+pixelfm --check            # dependency check and every storage path
+pixelfm --version
 ```
 
 Press **2** (or **/**) to search, **enter** to play, **1** to come back to the
@@ -186,13 +298,14 @@ booth, and **?** for every key.
 | `5` | **Liked** | liked songs, sortable |
 | `6` | **Downloads** | saved files with sizes, status, and storage info |
 | `7` | **Recent** | recently played with play counts |
-| `8` | **Settings** | theme, party mode, layout, effects, meters, artwork, downloads folder |
+| `8` | **Settings** | theme, party/rave mode, layout, effects, meters, artwork, Spotify, downloads folder |
 
 Switching views never interrupts playback. The tab strip and header show where
 you are. Outside the booth, a mini player stays at the bottom.
 
 Markers in track lists: `▶` playing, `♥` liked, `↓` downloaded, `≡` queued,
-`✕` unavailable last time. In ASCII mode they are `>`, `*`, `v`, `+`, and `x`.
+`✕` unavailable last time (or, in an imported playlist, not matched to a
+YouTube video yet). In ASCII mode they are `>`, `*`, `v`, `+`, and `x`.
 
 ## Keyboard shortcuts
 
@@ -230,14 +343,15 @@ mouse. The mouse also works: click buttons, the timeline, and faders.
 | View | Keys |
 | --- | --- |
 | Queue (and the booth's queue panel) | `d` remove · `K`/`J` move · `C` clear (asks first) |
-| Playlists, left | `enter` play all · `Z` shuffle · `A` append · `c` new · `e` rename · `d` delete (asks first) · `l` tracks |
-| Playlists, right | `enter` play from here · `Z` shuffle · `d` remove · `K`/`J` reorder · `h` back |
+| Playlists, left | `enter` play all · `Z` shuffle · `I` import · `M` review matches · `X` stop matching · `A` append · `c` new · `e` rename · `d` delete (asks first) · `l` tracks |
+| Playlists, right | `enter` play from here · `Z` shuffle · `M` review matches · `d` remove · `K`/`J` reorder · `h` back |
 | Liked | `enter` play · `d` unlike · `o` sort · `A` append all |
 | Downloads | `enter` play · `d` delete file (asks first) · `L` relink · `X` clean missing · `c` cancel download |
 | Recent | `enter` play · `A` append all |
 | any list | `ctrl+f` filter · `esc` clear filter / back |
 
-**Display and app:** `P` Party Mode on/off · `m` artwork style · `v`
+**Display and app:** `P` Party Mode on/off · `R` RAVE MODE on, then next
+pattern · `I` import a playlist · `m` artwork style · `v`
 full/compact layout · `V` meters on/off · `?` help · `q`, `ctrl+c`, or `ctrl+q`
 quit (the session is saved first).
 
@@ -278,14 +392,20 @@ rebuffer, typically 0.3–1 s. Pause and seek work the same way: pause stops
 ffplay and remembers the position, because `SIGSTOP` was tested and makes
 ffplay skip audio.
 
-**Cover art.** Terminals draw text cells, so the cover is drawn with
-quadrant block characters: every cell shows 2×2 image pixels, using the two
-colours that best fit them, after smooth (Lanczos) downscaling. That is twice
-the detail of the usual half-block approach, with no scanline striping. On a
-terminal 40+ rows tall the booth shows the cover at 32×16 cells (64×32 image
-pixels). `m` switches to mono or glyph styles. Showing the actual photo would
-need a terminal graphics protocol (Kitty, Ghostty, WezTerm, iTerm2); macOS
-Terminal.app has none, so PixelFM does not use one yet.
+**Cover art.**
+- **The real picture** in terminals with an image protocol: the Kitty
+  graphics protocol (Kitty, Ghostty, WezTerm) or Sixel (iTerm2 3.5+, WezTerm,
+  foot, VS Code with `terminal.integrated.enableImages`). PixelFM asks the
+  terminal at start-up (via `textual-image`) and uses whatever it supports.
+- **Everywhere else**, including macOS Terminal.app (which can only draw
+  characters), the cover is drawn with quadrant blocks: every cell shows 2×2
+  image pixels in the two colours that fit them best, after smooth (Lanczos)
+  downscaling, with no scanline striping.
+- On a terminal 40+ rows tall the booth shows the cover at 32×16 cells. `m`
+  switches to mono or glyph styles (characters, even in image terminals).
+  `--images off` (or `PIXELFM_GRAPHICS=off`) always uses characters; for a
+  terminal that supports images but doesn't say so, try `--images kitty` or
+  `--images sixel`.
 
 **Colours from the artwork.** With **Theme: music** (the default), PixelFM
 extracts a palette from the current track's thumbnail:
@@ -321,6 +441,31 @@ theme changes at most once every 2 seconds; backgrounds never flash and no
 light is brighter than the neon colours themselves (no white). Party Mode is
 unavailable with reduced effects (including macOS *Reduce motion*) or
 `NO_COLOR`. It is remembered between sessions; `P` turns it off at once.
+
+**RAVE MODE.** `R` turns the whole terminal into a light rig; `R` again
+switches pattern, `P` turns it off at once. It lights the header (a full-width
+light strip, the logo), the tabs, every panel border in the visible view, the
+progress bar, the meters, the footer, and (once a second) the theme accents
+used by selected rows and focused controls. All regions share one clock with
+offset positions, so the light travels around the screen as one rig.
+
+| Pattern | What it does |
+| --- | --- |
+| `auto` (default) | Plays each pattern for 8 s, with a coordinated sweep across the UI between them. |
+| `chase` | COLOR CHASE: neon colours travel around the panels, each region a step behind the last. |
+| `dance` | DANCE FLOOR: alternating cyan/magenta and blue/violet; at most 3 swaps a second. |
+| `laser` | LASER SWEEP: a narrow beam runs across the strip, the logo, and the panels. |
+| `bass` | BASS PULSE: brightness follows the **measured** loudness. Without measurements the header says **NO SIGNAL** and the lights don't pulse. There is no beat or BPM detection. |
+| `rainbow` | RAINBOW CIRCUIT: every region cycles the whole neon palette, offset in time. |
+
+Speed and cost (measured here, 140×42 terminal): the rig runs at about 14–16
+frames a second, borders change colour 8 times a second (the deck 2 times,
+because repainting it redraws the cover), and theme accents once a second.
+That costs roughly a fifth of one CPU core and ~450 KB/s of terminal output,
+against ~25 KB/s in normal mode. Nothing heavy runs per frame: no artwork
+processing, database writes, or layout passes. With a Sixel cover on screen
+the deck border and theme accents stay still, so the image is never re-sent.
+Like Party Mode, RAVE is unavailable with reduced effects or `NO_COLOR`.
 
 ---
 
@@ -367,6 +512,147 @@ or artist (`o`).
 - A play is counted once, when audio actually starts. Pause/resume, seek, and
   EQ changes don't add plays.
 - Counts are kept per track. The history log keeps the newest 1,000 plays.
+
+### Importing playlists (Spotify)
+
+Press `I` (or **⤓ IMPORT** in the Playlists view) and paste a Spotify
+playlist link, or the path to an export file. PixelFM shows a preview (name,
+owner, track count, every track), then **Import** (save it) or **Import and
+match** (save it, then find each track on YouTube in the background).
+
+**What Spotify allows** (verified against Spotify's documentation, October
+2026):
+- Personal apps read playlists through the Spotify Web API in *Development
+  Mode*. Each PixelFM user creates their own free Spotify developer app; its
+  **owner needs Spotify Premium**, and it can have up to 5 users.
+- Since March 2026 Spotify gives such apps the **track list only of
+  playlists you own or collaborate on**. For anyone else's playlist (a
+  friend's, Spotify's own) it returns only the name and owner, and PixelFM
+  says so instead of trying to work around it. To import one anyway: in
+  Spotify, open it, select all tracks, **Add to playlist → New playlist**, and
+  import your copy.
+- Wider access (Extended Quota Mode) is only for organisations with 250k+
+  monthly users, so PixelFM can't offer it.
+
+**One-time set-up** (PixelFM walks you through it on the first import):
+1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard)
+   and **Create app** (any name; API: Web API).
+2. Add the redirect URI `http://127.0.0.1:8898/callback` exactly.
+3. Copy the app's **Client ID** into PixelFM. No client secret is needed: the
+   sign-in uses PKCE.
+4. On import PixelFM opens your browser at spotify.com to sign in and approve
+   read access to your playlists (`playlist-read-private`,
+   `playlist-read-collaborative`). It **never sees your password**; the
+   tokens go to the macOS Keychain. Settings shows the state and signs out.
+   You can also set `PIXELFM_SPOTIFY_CLIENT_ID`.
+
+**Export files instead** (no developer app needed):
+- Spotify's own data download (Spotify Account → Privacy → *Download your
+  data*): import `Playlist1.json`; you choose which playlist.
+- A CSV with a header row: Exportify-style columns (`Track Name`,
+  `Artist Name(s)`, `Album Name`, `Duration (ms)`, `Track URI`, `Explicit`)
+  or simply `title`, `artist`, `album`, `duration`.
+
+**What is kept.** Title, every artist, album, duration, album artwork, the
+Spotify track id, the explicit flag, and the original position. Nothing is
+silently dropped:
+- Removed tracks are listed as *unavailable*.
+- Podcast episodes are listed as *skipped*.
+- A track that appears twice is listed as a *duplicate*: a PixelFM playlist
+  holds each track once.
+- Local files from your Spotify app are kept and matched by title and artist.
+- The summary always shows the matched, unmatched, and skipped counts.
+- If the name is already taken, the playlist is saved as "Name (2)"; nothing
+  is overwritten.
+
+**Matching on YouTube.** Spotify gives metadata, not audio. Each track is
+searched as "artist - title" through PixelFM's normal YouTube search, two at
+a time with a pause between, so a big playlist never floods YouTube. Each
+candidate is scored on:
+- the title words and artist names;
+- the length, as a secondary signal;
+- official uploads (the "Artist - Topic" studio recordings, the artist's own
+  channel, VEVO);
+- a strong penalty for other versions, unless the Spotify title asks for one
+  ("Live", "Remix"): lyric videos, live, remixes, sped-up, slowed, covers,
+  loops, and the like.
+
+The best candidate is used if it is **strong** (80%+) or **likely**
+(62%+, marked for review). Anything weaker stays **unmatched**: it keeps its
+place in the playlist (marked `✕`) and is never played. Matches are guesses,
+and the review screen shows each one's score and reasons.
+
+**Review and fix** (`M`): every entry, unsure and unmatched first.
+- `enter` searches YouTube for that track (edit the search and press enter
+  again) and lets you pick a candidate or leave it unmatched.
+- `u` unmatches an entry.
+- `a` matches everything not matched yet.
+
+Matching can be stopped with `X` (matches so far are kept) and resumed with
+`M` → `a`. Nothing is downloaded during an import.
+
+**Afterwards** an imported playlist is an ordinary PixelFM playlist: play
+all, shuffle, queue, like, rename, delete, with its order and session
+recovery as usual. Played tracks show the Spotify title, artists, album, and
+album cover (which also drives the artwork colours).
+
+### Importing from screenshots
+
+Press `I` and drop one or more screenshots of a song list on the terminal
+(or paste their paths). To use a screenshot on the clipboard (`⌃⇧⌘4` on a
+Mac), leave the field empty and press enter.
+
+1. **Reading.** PixelFM reads the text with the computer's own engine:
+   Apple's Vision framework on macOS (built in, nothing to install), and
+   Tesseract on Linux (the npm launcher offers to install it). The image
+   never leaves your computer, and no AI service or account is involved.
+   It recognises the usual layouts: the title with the artist underneath
+   (Spotify, phones) or in the next column (Apple Music, YouTube Music).
+   Headers, track numbers, dates, play counts, the explicit badge, and the
+   playlist's own heading are left out; durations are kept when readable.
+   Overlapping screenshots of one long list are merged without repeats.
+2. **Check.** Every song read is listed before anything is saved: `space`
+   leaves out a misread row, `e` fixes one (`Title — Artist`).
+3. **Where to.** Choose **+ New playlist** (named after the screenshot's
+   heading; you can change it) or an existing playlist. Songs that are
+   already in that playlist are skipped: by title and artist (also when the
+   entry is a YouTube video such as "Artist - Song (Official Video)"), and
+   again after matching if a song's YouTube match is already in it.
+4. **Matching** works exactly as for Spotify imports, including the review
+   with `M`. The playlist's heading counts the matched and skipped songs.
+
+Windows has its own text recognition too, but PixelFM doesn't run on
+Windows yet, so there is no Windows reader.
+
+### macOS media controls
+
+While PixelFM runs on a Mac, these control it even when its terminal is in
+the background:
+- the keyboard's play/pause, next, and previous keys;
+- headphone buttons;
+- Control Centre and the menu-bar Now Playing item, which also show the
+  title, artist, album, cover, length, and position.
+
+**How it works.** A terminal program isn't a macOS media app, so PixelFM
+ships a small native helper, `PixelFMMedia.app`:
+- It is ~230 KB of Swift, a universal binary for Apple Silicon and Intel,
+  with no Dock icon.
+- It publishes `MPNowPlayingInfoCenter` metadata and receives
+  `MPRemoteCommandCenter` commands.
+- It talks to PixelFM over a pipe (JSON lines). Commands run the same actions
+  as PixelFM's own keys, so there is one playback state and the queue order
+  (including shuffle) is respected.
+- Repeated key events within 0.25 s count once.
+- The helper lives exactly as long as PixelFM: when PixelFM quits (or
+  crashes) the helper clears Now Playing and exits.
+- Nothing runs in the background afterwards. When PixelFM isn't running the
+  keys go to whatever app macOS picks (often Apple Music).
+- Needs macOS 12+. The helper is ad-hoc signed and built during packaging, so
+  users never compile anything.
+
+**Testing it on your Mac:** `pixelfm --media-test` makes PixelFM the Now
+Playing item for 60 s and prints every command it receives. Press the keys
+and use Control Centre's buttons.
 
 ### Session recovery
 
@@ -442,7 +728,9 @@ or already closing exits quietly with status 130 after a last save.
 
 ## Your data
 
-Everything is local; no account or cloud service is involved.
+Everything is local. The only account PixelFM ever uses is your own Spotify
+sign-in, and only if you import a playlist from a link. Screenshots are read
+on your computer and not kept.
 
 | What | macOS | Linux |
 | --- | --- | --- |
@@ -452,8 +740,10 @@ Everything is local; no account or cloud service is involved.
 | Thumbnail cache (disposable) | `~/Library/Caches/PixelFM/` | `~/.cache/pixelfm/` |
 | Log | `~/Library/Logs/PixelFM/pixelfm.log` | `~/.local/state/pixelfm/pixelfm.log` |
 | Config you edit (optional) | `~/.config/pixelfm/config.toml` | same |
+| Spotify sign-in tokens | macOS Keychain ("PixelFM Spotify") | Secret Service (`secret-tool`), else a 0600 file |
+| Now Playing cover copies (disposable) | `~/Library/Caches/PixelFM/nowplaying/` | `~/.cache/pixelfm/nowplaying/` |
 
-`party --check` prints the exact paths. Overrides: `PIXELFM_DATA_DIR`,
+`pixelfm --check` prints the exact paths. Overrides: `PIXELFM_DATA_DIR`,
 `PIXELFM_DOWNLOADS_DIR`, `PIXELFM_CACHE_DIR`, `PIXELFM_LOG_FILE`,
 `PIXELFM_CONFIG`, `PIXELFM_RUNTIME_DIR`.
 
@@ -463,7 +753,10 @@ each time.
 
 **Upgrades.**
 - The schema is versioned. Version 3 (PixelFM 2.0) adds play counts,
-  downloads, and the saved queue; version 4 (2.1) adds the session snapshot.
+  downloads, and the saved queue; version 4 (2.1) adds the session snapshot;
+  version 5 (2.3) adds imported playlists (`imports`, `import_items`), and
+  version 6 (2.3) records which addition each imported entry came with
+  (`import_items.batch`), for screenshots added to existing playlists.
 - Before upgrading, PixelFM writes `library.sqlite3.v<old>.bak` next to the
   library, and each migration is one transaction.
 - A library from a *newer* PixelFM, or an unreadable file, is never modified;
@@ -502,21 +795,30 @@ search_timeout = 20
 
 | Problem | Fix |
 | --- | --- |
-| `party: PixelFM needs Python 3.12 or newer` | Install Python (table above), or set `PIXELFM_PYTHON=/path/to/python3.12`. |
+| `pixelfm: PixelFM needs Python 3.12 or newer` | Install Python (table above), or set `PIXELFM_PYTHON=/path/to/python3.12`. |
 | "venv/ensurepip missing" | Debian/Ubuntu: `sudo apt install python3.12-venv` (or `python3-venv`). |
-| First run fails while installing | It needs internet once. The message shows pip's last lines. Retry, or `party --reinstall-runtime`. |
-| `party: command not found` | Add npm's global bin (`$(npm prefix -g)/bin`) to PATH. |
-| "ffplay not found" | `brew install ffmpeg` / `sudo apt install ffmpeg`, or set `ffplay_path`. Search works meanwhile. |
-| Many tracks fail, "Sign in to confirm", "No playable audio format" | `party --update-ytdlp`. PixelFM never bypasses sign-in, age, or region checks, so some videos can't play. |
+| First run fails while installing | It needs internet once. The message shows pip's last lines. Retry, or `pixelfm --reinstall-runtime`. |
+| `pixelfm: command not found` | Add npm's global bin (`$(npm prefix -g)/bin`) to PATH. |
+| "ffplay not found" | `pixelfm --install-deps`, or `brew install ffmpeg` / `sudo apt install ffmpeg`, or set `ffplay_path`. Search works meanwhile. |
+| Screenshot: "needs Tesseract" (Linux) | `pixelfm --install-deps`, or `sudo apt install tesseract-ocr`. |
+| Screenshot: "No songs found" or rows misread | Crop to the song list, use a larger window or zoom, and check the rows (`e` fixes one). Very small or blurry text can't be read. |
+| Many tracks fail, "Sign in to confirm", "No playable audio format" | `pixelfm --update-ytdlp`. PixelFM never bypasses sign-in, age, or region checks, so some videos can't play. |
 | Meters say NO MEASUREMENTS | Your FFmpeg build lacks `astats`/`ametadata`; PixelFM fell back to plain playback (see the log). |
 | Meters say SIMULATED ENGINE | You're in `--mock` mode: there is no audio to measure. |
 | A download fails | The status bar shows why. Live streams can't be saved, and protected videos fail by design. |
 | Downloads show MISSING | The file moved or was deleted. `L` relinks it, `X` removes stale entries. |
-| Colours look wrong | Try `color = "256"`, `party --no-color`, or `unicode = "never"`. A fixed theme (Settings → Theme) stops the colours following the artwork. |
+| Colours look wrong | Try `color = "256"`, `pixelfm --no-color`, or `unicode = "never"`. A fixed theme (Settings → Theme) stops the colours following the artwork. |
 | Party Mode won't start | It needs full effects: Settings → Effects → `full` (macOS *Reduce motion* makes `auto` reduced), and no `NO_COLOR`. |
+| Spotify: "only gives the track list of playlists you own" | A Spotify rule for personal apps. Copy the playlist into one you own (select all → Add to playlist → New playlist), or import an export file. |
+| Spotify: "owner … needs an active Premium subscription" | Your Spotify developer app's owner needs Premium. |
+| Spotify: "isn't on your developer app's user list" | Add your account under User Management in the Spotify dashboard. |
+| Spotify sign-in never comes back | The redirect URI in your Spotify app must be exactly `http://127.0.0.1:8898/callback`, and that port must be free. |
+| Many tracks unmatched | Press `M`, pick a track, and edit the search (e.g. add the album or "official audio"). |
+| Media keys don't reach PixelFM | Run `pixelfm --media-test`. If nothing is received, another app is Now Playing: pause it, or press play in PixelFM once. A source checkout needs `npm run build:helper`. |
+| The cover is blocky | Your terminal draws only characters (macOS Terminal.app does). Real covers need Kitty, Ghostty, WezTerm, or iTerm2 3.5+. |
 | "Couldn't resume …" after a restart | The video became unavailable or the network is down. The queue is kept: `space` retries, `n` skips. |
 | Garbled terminal after `kill -9` | Run `reset`. Normal exits restore the terminal. |
-| Anything else | `~/Library/Logs/PixelFM/pixelfm.log`; for more detail `PIXELFM_LOG_LEVEL=DEBUG party`. |
+| Anything else | `~/Library/Logs/PixelFM/pixelfm.log`; for more detail `PIXELFM_LOG_LEVEL=DEBUG pixelfm`. |
 
 ## Known limitations
 
@@ -534,9 +836,11 @@ search_timeout = 20
   machine.
 - **Downloads.** Downloads keep the original audio stream (usually m4a/AAC)
   and don't re-encode or tag files. One download runs at a time.
-- **npm install.** It needs Python 3.12+, internet on first run, and
-  FFmpeg/deno installed separately. Dependencies are pinned to exact versions
-  but are not hash-verified.
+- **npm install.** It needs Python 3.12+ and internet on first run. FFmpeg
+  (and Tesseract on Linux) are installed by the launcher only after you agree,
+  with your package manager; yt-dlp's JavaScript runtime is covered by the
+  Node.js that npm needs (or deno/bun). Dependencies are pinned to exact
+  versions but are not hash-verified.
 - **Database work.** Library queries run on the UI thread; they are small
   SQLite operations. File checks, deletions, and downloads run in background
   threads.
@@ -556,14 +860,40 @@ search_timeout = 20
 - **Party Mode and audio.** Pulse and strobe react only to measured loudness
   (no beat or BPM detection). With the simulated engine, or before
   measurements arrive, the lights stay calm.
+- **RAVE MODE cost.** About a fifth of one CPU core and ~450 KB/s of
+  terminal output while it runs. Slow terminals may drop frames; playback and
+  input are unaffected.
+- **Real covers.** They need a terminal with the Kitty graphics protocol or
+  Sixel. During development the image data was checked (complete Sixel
+  images and Kitty commands are sent), but the pictures were not seen on a
+  real image-capable terminal, because none was available. Terminal.app can
+  only draw characters.
+- **Spotify.** Only playlists you own or collaborate on, through your own
+  developer app (Premium owner, up to 5 users): Spotify's rules, not
+  PixelFM's. Export files work for anything you can export.
+- **Matching.** YouTube matches are scored guesses. Some songs aren't on
+  YouTube, have only unofficial uploads, or have several equally good
+  versions; review "likely" and "unmatched" entries.
+- **macOS media controls.** The helper, its protocol, and its start-up and
+  shutdown were tested on macOS 26 (Apple Silicon). Whether the hardware keys
+  and Control Centre reach it depends on macOS choosing PixelFM as the Now
+  Playing app; this could not be tested automatically, because macOS ignores
+  simulated key presses from tools without Accessibility permission. Check it
+  with `pixelfm --media-test`. Intel Macs and macOS 12–15 are built for but
+  untested.
 - **Platforms.** macOS and Linux only. Tested on macOS (Apple Silicon) with
   Python 3.12, 3.13, and 3.14, FFmpeg 8.1, yt-dlp 2026.08.19, Textual 8.2, and
   Node 22. Linux has not been tested on real hardware.
+- **Screenshot reading** was tested with Apple Vision and Tesseract 5.5 on
+  screenshots in four layouts made for the tests, not on every app's real
+  screens; check the rows before adding them. The Linux package-manager
+  installs (apt, dnf, pacman, zypper, apk) are tested with fake package
+  managers only.
 
 ## Manual check: real audio
 
-1. `party --check` shows everything `ok`.
-2. Run `party`, press `2`, search `daft punk around the world`, press `enter`,
+1. `pixelfm --check` shows everything `ok`.
+2. Run `pixelfm`, press `2`, search `daft punk around the world`, press `enter`,
    then `1`. You hear audio, the deck says PLAYING, the timeline advances in
    step, and the L/R meters and bands move with the music.
 3. Press `}` three times. After a short rebuffer the bass is clearly louder,
@@ -576,31 +906,67 @@ search_timeout = 20
    press `6`. Turn Wi-Fi off and play it: the header says LOCAL FILE and the
    audio plays.
 7. Queue a few tracks, play one to about a minute, and quit with `ctrl+c`.
-   Run `party` again. The same queue appears, the deck shows **PAUSED · restored
+   Run `pixelfm` again. The same queue appears, the deck shows **PAUSED · restored
    at m:ss**, nothing plays, and `space` resumes from that point.
 8. Press `4`, highlight a playlist, and press `Z`. The queue shows the
    playlist in a new order and it starts playing; the playlist itself keeps
    its order. Press `Z` again for another order.
 9. Press `P` and watch the booth lights; with `pulse` (Settings) they follow
    the music. Press `P` again: they stop at once.
+10. Press `R`: RAVE MODE lights the whole screen. Press `R` a few times to
+    change pattern; with `bass` the lights follow the music. `P` stops it.
+11. With music playing, switch to another app and press the keyboard's
+    play/pause key, then next. Open Control Centre: PixelFM's track and cover
+    are there, and its buttons work. (`pixelfm --media-test` checks this
+    without music.)
+12. Press `4`, then `I`, and paste a link to a Spotify playlist you own.
+    Follow the one-time set-up, choose **Import and match**, and press `M`
+    to review the matches.
+13. Take a screenshot of a song list (`⌃⇧⌘4` on a Mac copies it to the
+    clipboard). Press `4`, `I`, and `enter` on the empty field. Check the
+    songs, choose an existing playlist, and confirm that songs already in it
+    are reported as skipped.
+
+## Security and privacy
+
+- **Passwords and secrets.** PixelFM never asks for a Spotify password; you
+  sign in on spotify.com. No client secret exists (PKCE), and none is in the
+  package. Tokens are stored in the macOS Keychain (the Secret Service on
+  Linux), never in the library or logs, and are written through stdin rather
+  than on a command line. Settings → Spotify sign-in removes them.
+- **What is sent.** Spotify is only asked for the playlists you import, with
+  read-only scopes. YouTube receives searches, the same as typing them.
+  Screenshots are read on your machine and never uploaded. Nothing else
+  leaves your machine.
+- **Sign-in callback.** It is a one-shot server on `127.0.0.1` (unreachable
+  from the network) that checks the `state` value and closes after one
+  request.
+- **Media helper.** A local child process with no network access, talking
+  only to PixelFM through a pipe. It exits with PixelFM. The screenshot
+  reader next to it (`pixelfm-ocr`) reads one image and exits.
+- **Installing tools.** Only the npm launcher, only after you answer yes in
+  the terminal, and only with your system's own package manager.
 
 ## Development
 
 ```bash
 python3.13 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-pytest                    # Python tests (no network, no audio); ~520 tests
+pytest                    # Python tests (no network, no audio); ~640 tests
 ruff format . && ruff check .
 npm test                  # launcher tests (node:test; no network)
 PIXELFM_TEST_BOOTSTRAP=1 npm test   # + a real first-run setup (needs internet)
-npm pack                  # builds the wheel (prepack) and the npm tarball
+npm run build:helper      # macOS: the media-controls and screenshot helpers (Xcode CLT)
+npm pack                  # builds the helper + wheel (prepack) and the tarball
 python -m pixelfm --mock  # run from source with sample data
 ```
 
 Layout:
 
 ```
-bin/party.js, lib/launcher.js   npm launcher (private venv, signals, diagnostics)
+bin/pixelfm.js, lib/launcher.js  npm launcher (private venv, signals, diagnostics)
+lib/system-deps.js            FFmpeg/Tesseract per OS: check, ask, install
+native/macos/                 Swift helpers: media controls, screenshot text (build-helper.js)
 python/requirements.lock      exact runtime dependency versions for the launcher
 src/pixelfm/
   app.py                      Textual app: composition, playback flow, queue
@@ -611,18 +977,27 @@ src/pixelfm/
     ffplay.py                 FFplayPlayer: subprocess lifecycle, recovery, filters
     metering.py               astats filter graphs and the measurement parser
     downloads.py              DownloadManager and the yt-dlp downloader
-    library.py                SQLite library, session snapshot, migrations (v1-v4)
-    palette.py, party.py      artwork palettes and Party Mode lighting
+    library.py                SQLite library, session, imports, migrations (v1-v6)
+    palette.py, party.py      artwork palettes, Party Mode and RAVE lighting
+    spotify.py, matching.py   Spotify links/sign-in/API/exports, YouTube matching
+    screenshot.py             reading songs from screenshots (Vision / Tesseract)
+    media_session.py          macOS Now Playing / media keys (talks to the helper)
+    graphics.py, credentials.py  terminal image detection, token storage
     streams.py, youtube.py    yt-dlp search and stream resolution (local-first)
     artwork.py, cache.py      thumbnails, cover renderer, caches
   queue.py, state.py          queue model and playback state machine
 tests/                        pytest suite (fakes.py: fake ffplay, resolver, reaper)
-test/launcher.test.js         launcher tests
-docs/screenshots/             real SVG screenshots used in this README
+tests/fixtures/screenshots/   test screenshots and what Vision/Tesseract read from them
+test/                         launcher and system-tools tests (node:test)
+docs/GUIDE.md                 the user guide (how to do everything)
+docs/screenshots/             real SVG screenshots used in the docs
+CHANGELOG.md                  what changed in each version
 ```
 
 ## License
 
-MIT. See [LICENSE](LICENSE). PixelFM is not affiliated with YouTube or Google.
+MIT. See [LICENSE](LICENSE). PixelFM uses
+[textual-image](https://github.com/lnqs/textual-image) (LGPL-3.0, installed
+unmodified from PyPI) for real covers. PixelFM is not affiliated with YouTube or Google.
 Downloading content is your responsibility: only download audio you own or are
 authorized to download.

@@ -1,0 +1,150 @@
+{
+"lines": [
+{
+"x": 31.6,
+"w": 226.3,
+"text": "Road Trip",
+"confidence": 1,
+"h": 52.3,
+"y": 118.6
+},
+{
+"w": 76.7,
+"confidence": 1,
+"h": 26.7,
+"text": "Injora",
+"x": 26.6,
+"y": 192.8
+},
+{
+"x": 29.4,
+"h": 22.2,
+"confidence": 1,
+"text": "29 min",
+"y": 233.0,
+"w": 76.0
+},
+{
+"x": 149.5,
+"y": 347.4,
+"w": 213.7,
+"h": 38.8,
+"confidence": 1,
+"text": "Blinding Lights"
+},
+{
+"x": 149.6,
+"h": 25.0,
+"text": "The Weeknd",
+"y": 395.0,
+"confidence": 1,
+"w": 147.2
+},
+{
+"w": 360.6,
+"text": "Levitating (feat. DaBaby)",
+"x": 149.6,
+"h": 37.0,
+"confidence": 1,
+"y": 476.0
+},
+{
+"confidence": 1,
+"h": 31.9,
+"x": 149.6,
+"w": 210.9,
+"text": "Dua Lipa, DaBaby",
+"y": 522.6
+},
+{
+"w": 125.3,
+"confidence": 1,
+"y": 605.6,
+"text": "bad guy",
+"h": 35.1,
+"x": 144.6
+},
+{
+"x": 149.6,
+"confidence": 1,
+"w": 127.6,
+"h": 27.4,
+"y": 650.0,
+"text": "Billie Eilish"
+},
+{
+"w": 211.0,
+"h": 39.8,
+"confidence": 1,
+"text": "Mr. Brightside",
+"x": 142.2,
+"y": 730.9
+},
+{
+"y": 780.0,
+"w": 127.5,
+"confidence": 1,
+"x": 147.2,
+"h": 22.3,
+"text": "The Killers"
+},
+{
+"y": 863.6,
+"h": 29.4,
+"x": 144.7,
+"w": 184.0,
+"text": "Heat Waves",
+"confidence": 1
+},
+{
+"x": 149.6,
+"w": 169.2,
+"text": "Glass Animals",
+"h": 24.5,
+"y": 907.8,
+"confidence": 1
+},
+{
+"y": 989.7,
+"text": "Tum Hi Ho",
+"x": 142.0,
+"h": 32.4,
+"w": 164.8,
+"confidence": 1
+},
+{
+"w": 130.6,
+"y": 1031.6,
+"x": 149.3,
+"confidence": 1,
+"text": "Arijit Singh",
+"h": 32.1
+},
+{
+"text": "Don't Start Now",
+"h": 32.2,
+"x": 149.6,
+"confidence": 1,
+"y": 1116.0,
+"w": 230.6
+},
+{
+"text": "Dua Lipa",
+"x": 149.5,
+"y": 1162.6,
+"h": 30.1,
+"confidence": 1,
+"w": 105.6
+},
+{
+"confidence": 0.5,
+"h": 12.3,
+"x": 708.9,
+"y": 1025.6,
+"text": "•••",
+"w": 31.9
+}
+],
+"height": 1688,
+"width": 780
+}

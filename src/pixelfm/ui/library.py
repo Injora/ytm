@@ -373,11 +373,13 @@ class LibraryMixin:
             tracks, playlist = [], None
         table.border_title = f"playlist: {playlist.name}" if playlist else "playlist"
         total = sum(t.song.duration for t in tracks)
+        imported = self._import_heading(playlist.id) if playlist else ""
         heading.update(
             f"[b $primary]{escape(playlist.name)}[/]  [$text-muted]"
             f"{plural(len(tracks), 'track')}"
-            + (f" · {format_duration(total)}" if total else "")
-            + " · Z shuffle · enter play[/]"
+            + (f" · {format_duration(total)}" if total and not imported else "")
+            + (f" · {imported}" if imported else " · Z shuffle · enter play")
+            + "[/]"
             if playlist
             else ""
         )

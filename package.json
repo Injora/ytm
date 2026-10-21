@@ -1,8 +1,16 @@
 {
   "name": "pixelfm",
-  "version": "2.1.1",
-  "description": "PixelFM: a cyberpunk DJ booth for your terminal. Search and play YouTube audio with real-time meters. Installs the `party` command.",
+  "version": "2.3.0",
+  "description": "PixelFM: a cyberpunk DJ booth for your terminal. Search and play YouTube audio with real-time meters. Installs the `pixelfm` command (and its short form `pfm`).",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Injora/ytm.git"
+  },
+  "homepage": "https://github.com/Injora/ytm#readme",
+  "bugs": {
+    "url": "https://github.com/Injora/ytm/issues"
+  },
   "keywords": [
     "music",
     "youtube",
@@ -13,7 +21,8 @@
     "cli"
   ],
   "bin": {
-    "party": "bin/party.js"
+    "pixelfm": "bin/pixelfm.js",
+    "pfm": "bin/pixelfm.js"
   },
   "files": [
     "bin/",
@@ -21,6 +30,8 @@
     "python/requirements.lock",
     "python/*.whl",
     "README.md",
+    "CHANGELOG.md",
+    "docs/GUIDE.md",
     "LICENSE"
   ],
   "engines": {
@@ -32,7 +43,8 @@
   ],
   "scripts": {
     "build:wheel": "node scripts/build-wheel.js",
+    "build:helper": "node scripts/build-helper.js",
     "prepack": "node scripts/build-wheel.js",
-    "test": "node --test test/launcher.test.js"
+    "test": "node --test test/launcher.test.js test/system-deps.test.js"
   }
 }

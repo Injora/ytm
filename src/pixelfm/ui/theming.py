@@ -24,14 +24,30 @@ from pixelfm.services.palette import (
     DEFAULT_PALETTE,
     Palette,
     blend,
+    mix,
     palette_from_theme,
     theme_from_palette,
     to_hex,
     with_accents,
 )
-from pixelfm.services.party import PartyFrame, PartyLights, PartyMode
+from pixelfm.services.party import (
+    RAVE_BORDER_EVERY,
+    PartyFrame,
+    PartyLights,
+    PartyMode,
+    RaveFrame,
+    RaveLights,
+    RavePattern,
+)
 from pixelfm.state import PlaybackStatus
-from pixelfm.widgets import BoothHeader, LightBar, Spectrum, StereoMeter, Timeline
+from pixelfm.widgets import (
+    BoothHeader,
+    LightBar,
+    Spectrum,
+    StereoMeter,
+    Timeline,
+    ViewTabs,
+)
 
 if TYPE_CHECKING:
     from pixelfm.models import Song
@@ -45,6 +61,32 @@ TRANSITION_INTERVAL = 0.15
 #: Booth panels whose borders carry Party Mode lighting, left to right.
 PARTY_PANELS = ("#deck", "#signal", "#mixer", "#booth-queue-panel")
 PARTY_STYLES = tuple(m for m in PartyMode if m is not PartyMode.OFF)
+#: RAVE lights the panels of the visible view: (selector, position around the
+#: screen, 0..1). One shared clock and offset positions keep regions moving
+#: together, like one light rig, instead of each blinking on its own.
+RAVE_REGIONS: dict[str, tuple[tuple[str, float], ...]] = {
+    "booth-view": (
+        ("#deck", 0.2),
+        ("#signal", 0.42),
+        ("#mixer", 0.6),
+        ("#booth-queue-panel", 0.8),
+    ),
+    "search-view": (("#search", 0.15), ("#results", 0.4), ("#queue", 0.75)),
+    "queue-view": (("#queue-table", 0.45),),
+    "playlists-view": (("#playlist-nav", 0.25), ("#playlist-table", 0.6)),
+    "liked-view": (("#liked-table", 0.45),),
+    "downloads-view": (("#downloads-table", 0.45),),
+    "recent-view": (("#recent-table", 0.45),),
+    "settings-view": (("#settings", 0.45),),
+}
+#: Fixed positions of the regions every view shares.
+TABS_AT, NOW_PLAYING_AT, FOOTER_AT = 0.08, 0.9, 0.97
+#: How much light the footer and status line get (backgrounds stay dark).
+FLOOR_GLOW = 0.16
+BORDER_RULES = ("border_top", "border_right", "border_bottom", "border_left")
+#: Regions that repaint a lot when their border changes (the deck redraws its
+#: whole cover) are relit less often, in frames between changes.
+SLOW_REGIONS = {"#deck": 8}
 
 
 class ThemingMixin:
@@ -183,16 +225,24 @@ class ThemingMixin:
             self._party_wanted = on
         self._stop_party()
         if on and self._party_allowed() is None:
-            lights = PartyLights(
-                self._party_style,
-                panels=len(PARTY_PANELS),
-                base=self._palette_now.background,
-            )
+            lights: PartyLights | RaveLights
+            if self._party_style is PartyMode.RAVE:
+                lights = RaveLights(
+                    self._rave_pattern, base=self._palette_now.background
+                )
+            else:
+                lights = PartyLights(
+                    self._party_style,
+                    panels=len(PARTY_PANELS),
+                    base=self._palette_now.background,
+                )
             self._party = lights
             self._party_t0 = time.monotonic()
             self._party_accents = None
+            # One timer, replaced (never added to) on every switch.
             self._party_timer = self.set_interval(1 / lights.fps, self._party_tick)
             self.screen.add_class("-party")
+            self.screen.set_class(isinstance(lights, RaveLights), "-rave")
             if self.theme != DYNAMIC_THEME:
                 self._paint(self._base_palette())
                 self.theme = DYNAMIC_THEME
@@ -211,6 +261,8 @@ class ThemingMixin:
     def _restore_after_party(self) -> None:
         """Back to the normal theme, with every lighting override removed."""
         self.screen.remove_class("-party")
+        self.screen.remove_class("-rave")
+        self._clear_rave_styles()
         with contextlib.suppress(NoMatches):
             for selector in (*PARTY_PANELS, "#now-playing"):
                 widget = self.query_one(selector)
@@ -244,11 +296,13 @@ class ThemingMixin:
             if state.status is PlaybackStatus.PLAYING
             else None
         )
-        frame = lights.frame(
-            time.monotonic() - self._party_t0, level.loudness if level else None
-        )
+        loudness = level.loudness if level else None
+        t = time.monotonic() - self._party_t0
         with contextlib.suppress(NoMatches):  # ticks can race shutdown
-            self._apply_party_frame(frame)
+            if isinstance(lights, RaveLights):
+                self._apply_rave_frame(lights, t, loudness)
+            else:
+                self._apply_party_frame(lights.frame(t, loudness))
 
     def _apply_party_frame(self, frame: PartyFrame) -> None:
         ascii_border = "ascii" if not self.unicode else "solid"
@@ -274,10 +328,149 @@ class ThemingMixin:
             self._paint(with_accents(self._base_palette(), *frame.theme_colours))
         self._render_party_indicator(frame)
 
-    def _render_party_indicator(self, frame: PartyFrame | None = None) -> None:
+    # ---------------------------------------------------------------- RAVE
+
+    def action_rave(self) -> None:
+        """``R``: start RAVE mode, or switch to its next pattern while on."""
+        if isinstance(self._party, RaveLights):
+            self._rave_pattern = self._rave_pattern.next()
+            self._save_pref("rave_pattern", str(self._rave_pattern))
+            self._party.pattern = self._rave_pattern
+            self._status(
+                f"RAVE pattern: {self._rave_pattern.label}. R for the next one, "
+                "P turns the lights off."
+            )
+            self._render_party_indicator()
+            self._refresh_settings()
+            return
+        if reason := self._party_allowed():
+            self._status(reason)
+            return
+        self._party_style = PartyMode.RAVE
+        self._save_pref("party_mode", str(PartyMode.RAVE))
+        self._set_party(True)
+        self._status(
+            f"RAVE MODE on: {self._rave_pattern.label}. R cycles patterns, "
+            "P turns it off."
+        )
+
+    def _rave_style(self, selector: str, kind: str, colour: Color) -> None:
+        """Set a border light, skipping the restyle if nothing changed."""
+        if self._rave_applied.get(selector) == (kind, colour):
+            return
+        widget = self.query_one(selector)
+        widget.styles.border = (kind, colour)
+        widget.styles.border_title_color = colour
+        self._rave_applied[selector] = (kind, colour)
+
+    def _rave_glow(self, selector: str, colour: Color) -> None:
+        """A dim glow on a bar's background (text stays readable)."""
+        key = f"bg:{selector}"
+        if self._rave_applied.get(key) == ("bg", colour):
+            return
+        self.query_one(selector).styles.background = colour
+        self._rave_applied[key] = ("bg", colour)
+
+    def _apply_rave_frame(
+        self, lights: RaveLights, t: float, loudness: float | None
+    ) -> None:
+        view = self._active_view()
+        regions = RAVE_REGIONS.get(view, ())
+        if view == "booth-view" and self._sixel_cover_showing():
+            # A Sixel cover is re-sent whenever the deck repaints; keep the
+            # deck border still and light everything around it instead.
+            regions = tuple(r for r in regions if r[0] != "#deck")
+        positions = [p for _, p in regions]
+        positions += [TABS_AT, NOW_PLAYING_AT, FOOTER_AT]
+        state = self.playback
+        progress = state.position / state.duration if state.duration else 0.0
+        frame = lights.frame(t, loudness, positions, progress)
+        *panel_colours, tabs, now_playing, floor = frame.zones
+        self._rave_frames += 1
+        borders = self._rave_frames % RAVE_BORDER_EVERY == 0
+        focused = self.focused
+        line = "solid" if self.unicode else "ascii"
+        focus_line = "heavy" if self.unicode else "ascii"
+        for (selector, _), colour in zip(regions, panel_colours, strict=True):
+            every = SLOW_REGIONS.get(selector, RAVE_BORDER_EVERY)
+            if self._rave_frames % every:
+                continue
+            widget = self.query_one(selector)
+            has_focus = focused is not None and (
+                focused is widget or widget in focused.ancestors
+            )
+            self._rave_style(
+                selector, focus_line if has_focus else line, Color(*colour)
+            )
+        if view != "booth-view" and borders:
+            self._rave_style("#now-playing", line, Color(*now_playing))
+        strip = tuple(to_hex(c) for c in frame.strip)
+        self.query_one("#top-lights", LightBar).colours = strip
+        if view == "booth-view":
+            self.query_one("#party-lights", LightBar).colours = strip[::-1]
+            timeline = self.query_one(Timeline)
+            timeline.gradient = tuple(to_hex(c) for c in frame.progress)
+            meters = (to_hex(frame.meter[0]), to_hex(frame.meter[1]))
+            self.query_one(StereoMeter).accent = meters
+            self.query_one(Spectrum).accent = meters
+        self.query_one(ViewTabs).accent = to_hex(tabs)
+        self.query_one(BoothHeader).set_logo_colours(strip[:: max(1, len(strip) // 24)])
+        background = self._palette_now.background
+        glow = Color(*mix(background, floor, FLOOR_GLOW))
+        if borders:
+            self._rave_glow("Footer", glow)
+            self._rave_glow("#status", glow)
+        sixel_booth = view == "booth-view" and self._sixel_cover_showing()
+        if frame.theme_colours != self._party_accents and not sixel_booth:
+            # Whole-UI accents (selected rows, focused buttons): every second.
+            # Skipped over a Sixel cover, which a full repaint re-sends.
+            self._party_accents = frame.theme_colours
+            self._paint(with_accents(self._base_palette(), *frame.theme_colours))
+        self._render_party_indicator(frame)
+
+    def _sixel_cover_showing(self) -> bool:
+        if self.graphics != "sixel":
+            return False
+        with contextlib.suppress(NoMatches):
+            return self.query_one("#deck-art").has_class("-image")
+        return False
+
+    def _clear_rave_styles(self) -> None:
+        """Remove every inline style RAVE set; nothing is left behind."""
+        applied, self._rave_applied = self._rave_applied, {}
+        with contextlib.suppress(NoMatches):
+            for key in applied:
+                if key.startswith("bg:"):
+                    widget = self.query_one(key[3:])
+                    widget.styles.clear_rule("background")
+                else:
+                    widget = self.query_one(key)
+                    for rule in (*BORDER_RULES, "border_title_color"):
+                        widget.styles.clear_rule(rule)
+                widget.refresh()
+            self.query_one("#top-lights", LightBar).colours = ()
+            self.query_one(Timeline).gradient = ()
+            self.query_one(ViewTabs).accent = None
+            self.query_one(BoothHeader).set_logo_colours(None)
+
+    def _render_party_indicator(
+        self, frame: PartyFrame | RaveFrame | None = None
+    ) -> None:
         header = self.query_one(BoothHeader)
         if not self._party_running():
             header.set_party("PARTY MODE: OFF", on=False)
+            return
+        if isinstance(self._party, RaveLights):
+            label = self._rave_pattern.label
+            if self._rave_pattern is RavePattern.AUTO and isinstance(frame, RaveFrame):
+                label = f"AUTO · {frame.pattern.label}"
+            if (
+                isinstance(frame, RaveFrame)
+                and frame.pattern is RavePattern.BASS
+                and not frame.reactive
+            ):
+                label += " · NO SIGNAL"  # nothing measured: no fake pulse
+            header.set_party(f"RAVE MODE: ON · {label}", on=True)
             return
         style = str(self._party_style).upper()
         note = ""

@@ -134,14 +134,19 @@ HELP = """\
 [b $primary]Lists[/]
   Queue:      [b]d[/] remove   [b]K[/]/[b]J[/] move   [b]C[/] clear (asks first)
   Playlists:  [b]enter[/] play all   [b]Z[/] shuffle   [b]A[/] append   [b]c[/] new   [b]e[/] rename   [b]d[/] delete
+              [b]I[/] import (Spotify link, export file, screenshots)   [b]M[/] review matches   [b]X[/] stop matching
               tracks: [b]d[/] remove   [b]K[/]/[b]J[/] reorder   [b]h[/] back
   Liked:      [b]d[/] unlike   [b]o[/] sort   [b]A[/] append all
   Downloads:  [b]d[/] delete file   [b]L[/] relink   [b]X[/] clean missing   [b]c[/] cancel download
 
 [b $primary]Display[/]
   [b]m[/] artwork style   [b]v[/] full / compact layout   [b]V[/] meters on/off
-  [b]P[/] party mode on/off (style in Settings: ambient, pulse, strobe)
+  [b]P[/] party mode on/off (style in Settings: ambient, pulse, strobe, rave)
+  [b]R[/] RAVE MODE: on, then the next pattern (chase, dance floor, laser, bass, rainbow)
   Theme "music" (default) takes its colours from the current track's artwork.
+
+[b $primary]Outside the terminal[/] (macOS)
+  media keys, headphones, and Control Centre: play/pause, next, previous
 
 [b $primary]Other[/]
   [b]?[/] this help   [b]q[/] or [b]ctrl+c[/] quit (saves the session: queue,
@@ -195,8 +200,8 @@ class WelcomeScreen(ModalScreen[None]):
             "[$success]Everything needed for playback is installed.[/]"
             if ready
             else "[$warning]Search works now; audio needs the missing tools above.\n"
-            "PixelFM never installs software itself. Run "
-            "[b]party --check[/b] after installing.[/]"
+            "PixelFM never installs software without asking. Run "
+            "[b]pixelfm --check[/b] after installing.[/]"
         )
         where = "\n".join(
             f"  [$text-muted]{escape(label):<9}[/] {escape(path)}"

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import hashlib
 import json
 import logging
 import os
@@ -37,12 +38,21 @@ from pixelfm.paths import cache_dir, display_path, library_path
 from pixelfm.queue import PlayQueue, QueueEntry, RepeatMode
 from pixelfm.services.artwork import ArtworkMode, ArtworkService, ColorDepth
 from pixelfm.services.cache import DiskCache
+from pixelfm.services.credentials import default_store
 from pixelfm.services.deps import check_dependencies
 from pixelfm.services.downloads import DownloadManager
 from pixelfm.services.ffplay import FFplayPlayer
-from pixelfm.services.library import DownloadRecord, Library, LibraryError, LibraryTrack
+from pixelfm.services.graphics import cell_pixels, widget_class
+from pixelfm.services.library import (
+    DownloadRecord,
+    Library,
+    LibraryError,
+    LibraryTrack,
+    is_placeholder,
+)
+from pixelfm.services.media_session import MediaSession, NowPlayingInfo, helper_path
 from pixelfm.services.palette import DEFAULT_PALETTE, Palette, PaletteService
-from pixelfm.services.party import PartyMode
+from pixelfm.services.party import PartyMode, RavePattern
 from pixelfm.services.playback import Player, SimulatedPlayer
 from pixelfm.services.search import (
     CachedSearchProvider,
@@ -56,6 +66,7 @@ from pixelfm.state import ACTIVE, PlaybackState, PlaybackStatus
 from pixelfm.styles import STYLESHEET, THEMES, glyphs_for, hex_to_rgb
 from pixelfm.ui.booth import BoothMixin
 from pixelfm.ui.downloads import DownloadsMixin
+from pixelfm.ui.importing import ImportMixin
 from pixelfm.ui.library import LIST_VIEWS, LibraryMixin
 from pixelfm.ui.settings import SettingsMixin
 from pixelfm.ui.theming import MUSIC, ThemingMixin
@@ -129,6 +140,7 @@ def open_library() -> tuple[Library, str | None]:
 class PixelFMApp(
     BoothMixin,
     LibraryMixin,
+    ImportMixin,
     DownloadsMixin,
     SettingsMixin,
     ThemingMixin,
@@ -167,6 +179,10 @@ class PixelFMApp(
         Binding("z", "toggle_shuffle", "Shuffle", show=False),
         Binding("Z", "shuffle_playlist", "Shuffle playlist", show=False),
         Binding("P", "toggle_party", "Party", show=False),
+        Binding("R", "rave", "Rave", show=True),
+        Binding("I", "import_playlist", "Import playlist", show=False),
+        Binding("M", "review_matches", "Review matches", show=False),
+        Binding("X", "stop_matching", "Stop matching", show=False),
         Binding("minus", "volume(-1)", "Vol-", show=False),
         Binding("plus,equals_sign", "volume(1)", "Vol+", show=False),
         Binding("left_curly_bracket", "bass(-1)", "Bass-", show=False),
@@ -203,6 +219,11 @@ class PixelFMApp(
         downloader: Any = None,
         cli_overrides: Collection[str] = (),
         rng: random.Random | None = None,
+        graphics: str | None = None,
+        image_widget: Any = None,
+        media: MediaSession | bool | None = True,
+        token_store: Any = None,
+        spotify_options: dict[str, Any] | None = None,
     ) -> None:
         super().__init__()
         self.config = config or Config()
@@ -282,10 +303,41 @@ class PixelFMApp(
             else PartyMode.AMBIENT
         )
         self._party_wanted = self._pref("party", False) is True
+        pattern = self._pref("rave_pattern", str(RavePattern.AUTO))
+        self._rave_pattern = (
+            RavePattern(pattern)
+            if pattern in {str(p) for p in RavePattern}
+            else RavePattern.AUTO
+        )
+        self._rave_applied: dict[str, Any] = {}
+        self._rave_frames = 0
         self._frame = 0
         self._decay_until = 0.0
         self.glyphs = glyphs_for(self.unicode)
 
+        #: Terminal image protocol ("sixel"/"kitty", detected in __main__), and
+        #: the widget class that draws real covers with it.
+        self.graphics = graphics if "NO_COLOR" not in os.environ else None
+        if image_widget is None and self.graphics:
+            image_widget = widget_class(self.graphics)
+        self._image_widget = image_widget
+        # macOS media keys / Control Centre (``True``: use the helper if this
+        # Mac has it; tests pass a session or ``None``).
+        if media is True:
+            executable = helper_path()
+            media = (
+                MediaSession(self._on_media_command, executable) if executable else None
+            )
+        self.media: MediaSession | None = media or None
+        self._media_art: dict[str, str] = {}
+        # Playlist import (see ImportMixin). Tokens live in the system keychain.
+        self.token_store = token_store if token_store is not None else default_store()
+        self._spotify_options = spotify_options or {}
+        self._spotify_client: Any = None
+        self._importing: Any = None
+        self._matching: tuple[int, int, int] | None = None
+        self._matcher_instance: Any = None
+        self._media_published = 0.0
         self.queue = PlayQueue()
         self._shuffle_rng = rng or random.Random()
         #: Playlist the queue was last filled from: {"id", "name", "shuffled"}.
@@ -366,6 +418,7 @@ class PixelFMApp(
     def compose(self) -> ComposeResult:
         g = self.glyphs
         u = self.unicode
+        yield LightBar(u, id="top-lights")
         yield BoothHeader(self.player.name, unicode=u)
         yield ViewTabs(id="tabs")
         with ContentSwitcher(initial=BOOTH, id="views"):
@@ -374,7 +427,9 @@ class PixelFMApp(
                     yield LightBar(u, id="party-lights")
                     with Vertical(id="deck"):
                         with Horizontal(id="deck-row"):
-                            yield AlbumArt(24, 12, id="deck-art")
+                            yield AlbumArt(
+                                24, 12, id="deck-art", image_widget=self._image_widget
+                            )
                             with Vertical(id="deck-info"):
                                 yield Static(id="deck-title")
                                 yield Static(id="deck-artist")
@@ -438,6 +493,12 @@ class PixelFMApp(
                             compact=True,
                             classes="action",
                         )
+                        yield Button(
+                            "⤓ IMPORT" if u else "IMPORT",
+                            id="pl-import",
+                            compact=True,
+                            classes="action",
+                        )
                     yield Input(
                         placeholder="filter this playlist (ctrl+f)",
                         id="playlist-filter",
@@ -476,7 +537,7 @@ class PixelFMApp(
             with Vertical(id="settings-view"):
                 yield SettingsList(id="settings")
                 yield Static(id="settings-paths")
-        yield NowPlaying(g, (10, 5))
+        yield NowPlaying(g, (10, 5), self._image_widget)
         yield StatusBar(g, animate=self.effects)
         yield Footer(compact=True)
 
@@ -532,6 +593,8 @@ class PixelFMApp(
         if self._party_wanted:
             self._set_party(True, save=False)
         self._session_ready = True
+        if self.media is not None:
+            self.run_worker(self._start_media(), group="media", exit_on_error=False)
         if self._startup_warnings and not self.provider.browsable:
             self._status(self._startup_warnings.pop(0), StatusLevel.ERROR)
         self._maybe_welcome()
@@ -667,11 +730,16 @@ class PixelFMApp(
         log.info("terminating on signal")
         self.save_session()  # before the player stops: keeps the position
         self.player.shutdown()
+        if self.media is not None:
+            self.media.shutdown()  # the helper clears Now Playing as it exits
         self.exit()
 
     async def action_quit(self) -> None:
         """Save the session and stop audio before exiting; never hang."""
         self.save_session()
+        if self.media is not None:
+            with contextlib.suppress(Exception):
+                await self.media.aclose()
         with contextlib.suppress(Exception):
             await asyncio.wait_for(self.downloads.aclose(), 1.0)
         try:
@@ -692,6 +760,8 @@ class PixelFMApp(
             with contextlib.suppress(Exception):
                 loop.remove_signal_handler(sig)
         self.player.shutdown()  # idempotent fallback for every exit path
+        if self.media is not None:
+            self.media.shutdown()
 
     def _fx_tick(self) -> None:
         with contextlib.suppress(NoMatches):  # ticks can race app shutdown
@@ -844,7 +914,7 @@ class PixelFMApp(
         tint = hex_to_rgb(getattr(self.current_theme, "primary", None), (0, 229, 255))
         for art_widget in self.query(AlbumArt):
             if song is not None and self.unicode and art_widget.id == "deck-art":
-                art_widget.loading = True
+                art_widget.set_busy(True)
             try:
                 result = await self.artwork.artwork_for(
                     song,
@@ -856,12 +926,26 @@ class PixelFMApp(
                     tint=tint,
                 )
             finally:
-                art_widget.loading = False
+                art_widget.set_busy(False)
             if song is not None and self._newest_song() != song:
                 return  # a different track was selected meanwhile
             art_widget.show(result.art)
             if result.error and song is not None:
                 log.info("artwork unavailable for %s: %s", song.id, result.error)
+            elif (
+                art_widget.supports_images
+                and song is not None
+                and self.artwork_mode is ArtworkMode.COLOR
+            ):
+                # The terminal can draw pictures: show the real cover.
+                cell_w, cell_h = cell_pixels()
+                cover = await self.artwork.cover_image(
+                    song, art_widget.art_width * cell_w, art_widget.art_height * cell_h
+                )
+                if self._newest_song() != song:
+                    return
+                if cover is not None:
+                    art_widget.show_image(cover)
         self._refresh_palette(song)  # bytes are cached now: the palette is cheap
 
     # ------------------------------------------------------------- playback
@@ -880,6 +964,13 @@ class PixelFMApp(
 
     def _play_entry(self, entry: QueueEntry, start: float = 0.0) -> None:
         """Ask the player for ``entry``; it becomes the one real events refer to."""
+        if is_placeholder(entry.song.id):
+            self._status(
+                f"“{entry.song.title}” isn't matched to a YouTube video yet: open "
+                "its playlist (4) and press M to find one.",
+                StatusLevel.ERROR,
+            )
+            return
         self._requested = entry
         self._play_seq += 1
         self._restored_position = 0.0
@@ -907,6 +998,9 @@ class PixelFMApp(
                 self._save_queue()
         if (previous.status, previous.song) != (state.status, state.song):
             self._schedule_queue_save()  # track change, pause, resume, end, ...
+            self._publish_now_playing()
+        elif time.monotonic() - self._media_published >= POSITION_SAVE_INTERVAL:
+            self._publish_now_playing()  # keep the system's clock honest
         if (previous.status, previous.detail, previous.song) != (
             state.status,
             state.detail,
@@ -1092,9 +1186,17 @@ class PixelFMApp(
             if table.id == table_id.lstrip("#"):
                 tracks = self._list_tracks.get(view, [])
                 index = event.cursor_row
+                if not table.has_focus:  # a refresh, not the user moving
+                    continue
                 if 0 <= index < len(tracks) and not tracks[index].available:
-                    reason = tracks[index].unavailable_reason
-                    self._status(f"Unavailable last time: {reason}")
+                    if is_placeholder(tracks[index].song.id):
+                        self._status(
+                            "Not matched on YouTube yet: press M to review the "
+                            "playlist's matches."
+                        )
+                    else:
+                        reason = tracks[index].unavailable_reason
+                        self._status(f"Unavailable last time: {reason}")
 
     @on(OptionList.OptionHighlighted, "#playlist-nav")
     def _on_playlist_highlighted(self, event: OptionList.OptionHighlighted) -> None:
@@ -1117,6 +1219,10 @@ class PixelFMApp(
     @on(Button.Pressed, "#pl-shuffle")
     def _on_playlist_shuffle(self) -> None:
         self.action_shuffle_playlist()
+
+    @on(Button.Pressed, "#pl-import")
+    def _on_playlist_import(self) -> None:
+        self.action_import_playlist()
 
     @on(Button.Pressed, "#pl-play")
     def _on_playlist_play(self) -> None:
@@ -1292,6 +1398,86 @@ class PixelFMApp(
         self.push_screen(
             ConfirmDialog("Clear the queue? (The playing track stays.)"), done
         )
+
+    # --------------------------------------------- system media controls
+
+    async def _start_media(self) -> None:
+        if self.media is not None and await self.media.start():
+            self._publish_now_playing()
+
+    def _on_media_command(self, name: str, position: float | None) -> None:
+        """A media key / Control Centre button: the same actions as the keys."""
+        status = self.playback.status
+        log.info("media command: %s", name)
+        if name == "toggle":
+            self.action_toggle_playback()
+        elif name == "play":
+            if status not in ACTIVE:
+                self.action_toggle_playback()
+        elif name == "pause":
+            if status in ACTIVE:
+                self._control(self.player.pause(), "Pause")
+        elif name == "next":
+            self.action_next_track()
+        elif name == "previous":
+            self.action_previous_track()
+        elif name == "seek" and position is not None and self.playback.can_seek:
+            self._seek_target = position
+            self._control(self.player.seek(position), "Seek")
+
+    def _now_playing_info(self) -> NowPlayingInfo | None:
+        """What the system shows; nothing when no track is loaded or stopped."""
+        state = self.playback
+        song = state.song or self._deck_song()
+        if song is None or state.status is PlaybackStatus.STOPPED:
+            return None
+        meta = self._display_meta(song)
+        return NowPlayingInfo(
+            title=meta.get("title", song.title),
+            artist=meta.get("artist", song.artist),
+            album=meta.get("album", ""),
+            duration=float(state.duration or song.duration or 0),
+            elapsed=round(float(state.position), 1),
+            playing=state.status in ACTIVE,
+            artwork=self._media_art.get(song.id),
+        )
+
+    def _publish_now_playing(self) -> None:
+        if self.media is None:
+            return
+        self._media_published = time.monotonic()
+        info = self._now_playing_info()
+        self.media.publish(info)
+        song = self.playback.song or self._deck_song()
+        if info is not None and song is not None and song.id not in self._media_art:
+            self.media_artwork(song)
+
+    @work(group="media-art", exclusive=True, exit_on_error=False)
+    async def media_artwork(self, song: Song) -> None:
+        """Save the cover to a file for Control Centre (it reads a path)."""
+        if not song.thumbnail_url:
+            return
+        try:
+            data = await self.artwork.image_data(song.thumbnail_url)
+        except Exception:
+            return
+        folder = cache_dir() / "nowplaying"
+        path = (
+            folder
+            / f"{hashlib.sha256(song.thumbnail_url.encode()).hexdigest()[:24]}.img"
+        )
+
+        def write() -> None:
+            folder.mkdir(parents=True, exist_ok=True)
+            if not path.exists():
+                tmp = path.with_suffix(".tmp")
+                tmp.write_bytes(data)
+                tmp.replace(path)
+
+        with contextlib.suppress(OSError):
+            await asyncio.to_thread(write)
+            self._media_art[song.id] = str(path)
+            self._publish_now_playing()
 
     # ----------------------------------------------------- session saving
 

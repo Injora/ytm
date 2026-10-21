@@ -16,20 +16,22 @@ def fake_which(*found: str):  # type: ignore[no-untyped-def]
 
 
 def test_all_present() -> None:
-    deps = check_dependencies(fake_which("ffplay", "deno"), versions=False)
+    deps = check_dependencies(
+        fake_which("ffplay", "deno", "tesseract"), versions=False, platform="linux"
+    )
     assert all(d.found for d in deps)
     assert "Everything needed" in format_report(deps)
     assert startup_warnings(fake_which("ffplay", "deno")) == []
 
 
 def test_missing_tools_give_install_commands() -> None:
-    deps = check_dependencies(fake_which(), versions=False)
-    missing = {d.name: d for d in deps if not d.found}
+    deps = check_dependencies(fake_which(), versions=False, platform="darwin", env={})
+    missing = {d.name: d for d in deps if not d.found and d.required}
     assert set(missing) == {"ffplay", "JavaScript runtime"}
     assert missing["ffplay"].install == "brew install ffmpeg"
     assert missing["JavaScript runtime"].install == "brew install deno"
     report = format_report(deps)
-    assert "MISSING" in report and "never installs" in report
+    assert "MISSING" in report and "never installs software without asking" in report
     warnings = startup_warnings(fake_which())
     assert any("brew install ffmpeg" in w for w in warnings)
 
@@ -64,3 +66,36 @@ def test_setup_logging_writes_file(tmp_path: Path) -> None:
             root.removeHandler(handler)
             handler.close()
     root.propagate = True
+
+
+def test_install_commands_follow_the_system() -> None:
+    from pixelfm.services.deps import install_hint
+
+    assert install_hint("ffmpeg", "darwin", fake_which(), {}) == "brew install ffmpeg"
+    assert (
+        install_hint("ffmpeg", "linux", fake_which("dnf"), {})
+        == "sudo dnf install ffmpeg-free"
+    )
+    assert (
+        install_hint("tesseract", "linux", fake_which("apt-get"), {})
+        == "sudo apt install tesseract-ocr"
+    )
+    npm = install_hint(
+        "tesseract", "linux", fake_which("pacman"), {"PIXELFM_LAUNCHER": "npm"}
+    )
+    assert (
+        npm
+        == "sudo pacman -S tesseract tesseract-data-eng (or run pixelfm --install-deps)"
+    )
+
+
+def test_the_screenshot_reader_is_optional() -> None:
+    deps = check_dependencies(
+        fake_which("ffplay", "deno"), versions=False, platform="linux", env={}
+    )
+    reader = next(d for d in deps if d.name == "screenshot reader")
+    assert not reader.found and not reader.required
+    assert "tesseract-ocr" in reader.install
+    report = format_report(deps)
+    assert "absent" in report and "Everything needed for playback" in report
+    assert startup_warnings(fake_which("ffplay", "deno")) == []

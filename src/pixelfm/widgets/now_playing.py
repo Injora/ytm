@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.markup import escape
@@ -98,15 +100,21 @@ class LevelMeter(Widget):
 class NowPlaying(Vertical):
     """Displays the engine's :class:`PlaybackState`."""
 
-    def __init__(self, glyphs: Glyphs, art_size: tuple[int, int] = (16, 8)) -> None:
+    def __init__(
+        self,
+        glyphs: Glyphs,
+        art_size: tuple[int, int] = (16, 8),
+        image_widget: Any = None,
+    ) -> None:
         super().__init__(id="now-playing")
         self._glyphs = glyphs
         self._art_size = art_size
+        self._image_widget = image_widget
         self.border_title = "now playing"
 
     def compose(self) -> ComposeResult:
         with Horizontal(id="np-row"):
-            yield AlbumArt(*self._art_size, id="art")
+            yield AlbumArt(*self._art_size, id="art", image_widget=self._image_widget)
             with Vertical(id="np-meta"):
                 yield Static(id="np-title")
                 yield Static(id="np-artist")

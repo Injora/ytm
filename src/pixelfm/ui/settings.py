@@ -10,7 +10,7 @@ from pixelfm.logs import default_log_path
 from pixelfm.paths import cache_dir, display_path
 from pixelfm.services.artwork import ArtworkMode
 from pixelfm.services.library import LIKED_ORDERS
-from pixelfm.services.party import PartyMode
+from pixelfm.services.party import PartyMode, RavePattern
 from pixelfm.styles import THEMES
 from pixelfm.ui.theming import MUSIC
 from pixelfm.widgets import SettingsList, StatusBar, TextPrompt
@@ -49,11 +49,16 @@ class SettingsMixin:
         else:
             party = (
                 f"[$text-muted]off · P starts {self._party_style} "
-                "(styles: ambient, pulse, strobe)[/]"
+                "(ambient, pulse, strobe, rave; R starts rave)[/]"
             )
+        rave = (
+            f"[b]{self._rave_pattern.label.lower()}[/] [$text-muted](R cycles "
+            "while RAVE is on: auto, chase, dance floor, laser, bass, rainbow)[/]"
+        )
         return [
             ("theme", "Theme", f"[b]{self._theme_choice}[/]{theme_note}", True),
             ("party", "Party mode", party, True),
+            ("rave_pattern", "Rave pattern", rave, True),
             (
                 "layout",
                 "Layout",
@@ -69,6 +74,8 @@ class SettingsMixin:
                 True,
             ),
             ("liked_order", "Liked songs order", f"[b]{self._liked_order}[/]", True),
+            ("spotify_client_id", "Spotify client ID", self._spotify_id_label(), True),
+            ("spotify_account", "Spotify sign-in", self._spotify_account_label(), True),
             (
                 "downloads_dir",
                 "Downloads folder",
@@ -90,6 +97,25 @@ class SettingsMixin:
             ),
             ("engine", "Playback engine", f"{self.player.name}", False),
         ]
+
+    def _spotify_id_label(self) -> str:
+        client_id = self._spotify_client_id()
+        if not client_id:
+            return "[$text-muted]not set · enter to set up playlist import (I)[/]"
+        return (
+            f"[b]{client_id[:6]}…{client_id[-4:]}[/] [$text-muted](enter to change)[/]"
+        )
+
+    def _spotify_account_label(self) -> str:
+        client = self._spotify() if self._spotify_client_id() else None
+        try:
+            signed_in = client is not None and client.signed_in
+        except Exception:  # keychain unavailable
+            signed_in = False
+        if signed_in:
+            store = getattr(self.token_store, "name", "keychain")
+            return f"[b]signed in[/] [$text-muted](kept in {store}; enter signs out)[/]"
+        return "[$text-muted]not signed in (PixelFM asks when you import)[/]"
 
     def _refresh_settings(self) -> None:
         try:
@@ -137,6 +163,13 @@ class SettingsMixin:
                 self._party_style = style
                 self._save_pref("party_mode", str(style))
                 self._set_party(True)
+        elif key == "rave_pattern":
+            self._rave_pattern = RavePattern(
+                cycle([str(p) for p in RavePattern], str(self._rave_pattern))
+            )
+            self._save_pref("rave_pattern", str(self._rave_pattern))
+            if self._party is not None and hasattr(self._party, "pattern"):
+                self._party.pattern = self._rave_pattern
         elif key == "layout":
             self._layout = cycle(LAYOUTS, self._layout)
             self._save_pref("layout", self._layout)
@@ -180,6 +213,14 @@ class SettingsMixin:
                 TextPrompt("Downloads folder", str(self._downloads_dir()), "folder"),
                 done,
             )
+            return
+        elif key == "spotify_client_id":
+            if direction > 0:
+                self.action_spotify_setup()
+            return
+        elif key == "spotify_account":
+            if direction > 0:
+                self.action_spotify_sign_out()
             return
         elif key == "clear_history":
             if direction > 0:

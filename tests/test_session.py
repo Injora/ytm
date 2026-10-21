@@ -368,7 +368,8 @@ def test_session_from_before_v4_keeps_its_position(tmp_path: Path) -> None:
     library = Library.open(path)
     library.save_queue(SONGS[:2], 1, 0.0)
     # Simulate a 2.0 (schema 3) database: position in the old preference.
-    library._conn.execute("DROP TABLE session")
+    for table in ("import_items", "imports", "session"):  # newer than schema 3
+        library._conn.execute(f"DROP TABLE {table}")
     library.set_pref("queue_position", 33.3)
     library._conn.execute("PRAGMA user_version = 3")
     library.close()

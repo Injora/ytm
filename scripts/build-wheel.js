@@ -20,6 +20,19 @@ if (python.error) {
   console.error('No Python 3.12+ found to build the wheel.');
   process.exit(1);
 }
+// The macOS helpers (media controls, screenshot reader) ship inside the wheel. Build it fresh (it
+// is never committed); on Linux the package simply has no helper.
+if (process.platform === 'darwin' && process.env.PIXELFM_SKIP_HELPER !== '1') {
+  const helper = spawnSync(process.execPath, [path.join(__dirname, 'build-helper.js')], {
+    cwd: root,
+    stdio: 'inherit',
+  });
+  if (helper.status !== 0) {
+    console.error('Could not build the macOS helpers (needs Xcode or the Command Line Tools).');
+    console.error('Set PIXELFM_SKIP_HELPER=1 to build a package without media controls.');
+    process.exit(helper.status || 1);
+  }
+}
 for (const name of fs.readdirSync(out)) {
   if (name.endsWith('.whl')) fs.rmSync(path.join(out, name));
 }

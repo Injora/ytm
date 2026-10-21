@@ -17,6 +17,7 @@ Pygments==2.21.0
 requests==2.34.2
 rich==15.0.0
 textual==8.2.8
+textual-image==0.14.1
 typing_extensions==4.16.0
 urllib3==2.8.0
 websockets==17.2

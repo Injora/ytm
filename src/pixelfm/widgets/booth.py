@@ -92,6 +92,18 @@ class BoothHeader(Horizontal):
     def set_engine(self, markup: str) -> None:
         self.query_one("#header-engine", Static).update(markup)
 
+    def set_logo_colours(self, colours: Sequence[str] | None) -> None:
+        """Run RAVE lights through the logo (``None``: the theme colours)."""
+        if not self._unicode:
+            return
+        colours = tuple(colours) if colours else None
+        if colours == getattr(self, "_logo_colours", None):
+            return
+        self._logo_colours = colours
+        # Same glyphs, new colours: the size can't change, so skip the layout
+        # pass (a full one costs ~20 ms; RAVE recolours the logo every frame).
+        self.query_one("#logo", Static).update(logo_markup(colours), layout=False)
+
     def set_party(self, label: str, *, on: bool) -> None:
         button = self.query_one("#party-toggle", Button)
         if str(button.label) != label:
@@ -121,6 +133,7 @@ class Timeline(Widget, can_focus=True):
     active: reactive[bool] = reactive(False)
     seekable: reactive[bool] = reactive(False)
     accent: reactive[str | None] = reactive(None)  # Party Mode light colour
+    gradient: reactive[tuple[str, ...]] = reactive(tuple)  # RAVE: colour per cell
 
     class Seek(Message):
         def __init__(self, position: float) -> None:
@@ -153,8 +166,18 @@ class Timeline(Widget, can_focus=True):
         filled = min(width - 1, int(ratio * width))
         colour = (self.accent or "$primary") if self.active else "$text-muted"
         head = g.bar_head if self.seekable or self.duration else g.bar_empty
+        gradient = self.gradient
+        if gradient and self.active and filled:
+            # RAVE: the filled part runs through the light rig's colours.
+            fill = "".join(
+                f"[{gradient[i * len(gradient) // filled]}]{g.bar_fill}[/]"
+                for i in range(filled)
+            )
+            bar = f"{fill}[{gradient[-1]}]{head}[/]"
+        else:
+            bar = f"[{colour}]{g.bar_fill * filled}{head}[/]"
         return (
-            f"[b]{left}[/] [{colour}]{g.bar_fill * filled}{head}[/]"
+            f"[b]{left}[/] {bar}"
             f"[$border-blurred]{g.bar_empty * (width - filled - 1)}[/] "
             f"[$text-muted]{right}[/]"
         )

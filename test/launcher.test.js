@@ -12,7 +12,7 @@ const { spawn, spawnSync } = require('node:child_process');
 const launcher = require('../lib/launcher.js');
 
 const ROOT = path.resolve(__dirname, '..');
-const BIN = path.join(ROOT, 'bin', 'party.js');
+const BIN = path.join(ROOT, 'bin', 'pixelfm.js');
 
 function tempDir(label = 'pixelfm test') {
   // Spaces on purpose: every path must survive them.

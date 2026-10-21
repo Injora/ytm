@@ -375,3 +375,20 @@ def test_cli_version(capsys: pytest.CaptureFixture[str]) -> None:
         main(["--version"])
     assert exit_info.value.code == 0
     assert "PixelFM" in capsys.readouterr().out
+
+
+def test_launcher_commands_explain_themselves_without_the_launcher(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from pixelfm.services.deps import check_dependencies
+
+    monkeypatch.setattr(  # nothing installed
+        "pixelfm.__main__.check_dependencies",
+        lambda **kw: check_dependencies(lambda name: None, **kw),
+    )
+    assert main(["--install-deps"]) == 1
+    out = capsys.readouterr().out
+    assert "belongs to the npm launcher" in out and "ffplay" in out
+    assert main(["--update-ytdlp"]) == 2
+    assert "pip install -U 'yt-dlp[default]'" in capsys.readouterr().out
+    assert main(["--runtime-info"]) == 2

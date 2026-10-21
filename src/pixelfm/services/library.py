@@ -15,6 +15,7 @@ each is well under a millisecond on a local disk.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import math
@@ -139,6 +140,54 @@ MIGRATIONS: tuple[tuple[int, str, tuple[str, ...]], ...] = (
             "DELETE FROM preferences WHERE key = 'queue_position'",
         ),
     ),
+    (
+        5,
+        "imported playlists",
+        (
+            # Where an imported playlist came from (one row per playlist).
+            """CREATE TABLE imports (
+                playlist_id INTEGER PRIMARY KEY
+                            REFERENCES playlists(id) ON DELETE CASCADE,
+                source      TEXT NOT NULL,
+                source_id   TEXT,
+                source_url  TEXT,
+                source_name TEXT NOT NULL,
+                owner       TEXT,
+                total       INTEGER NOT NULL,
+                imported_at REAL NOT NULL
+            )""",
+            # Every entry of the original, in its original order, with the
+            # metadata it came with and how (or whether) it was matched.
+            """CREATE TABLE import_items (
+                playlist_id INTEGER NOT NULL
+                            REFERENCES imports(playlist_id) ON DELETE CASCADE,
+                position    INTEGER NOT NULL,
+                spotify_id  TEXT,
+                title       TEXT NOT NULL,
+                artists     TEXT NOT NULL,
+                album       TEXT,
+                duration    REAL,
+                artwork_url TEXT,
+                explicit    INTEGER NOT NULL DEFAULT 0,
+                is_local    INTEGER NOT NULL DEFAULT 0,
+                status      TEXT NOT NULL,
+                track_id    TEXT REFERENCES tracks(id),
+                confidence  REAL,
+                note        TEXT,
+                PRIMARY KEY (playlist_id, position)
+            )""",
+            "CREATE INDEX import_items_track ON import_items(track_id)",
+        ),
+    ),
+    (
+        6,
+        "imports added to existing playlists",
+        (
+            # Which addition an entry came with: 0 for the first import, then
+            # 1, 2, ... for each later one (e.g. a screenshot added to it).
+            "ALTER TABLE import_items ADD COLUMN batch INTEGER NOT NULL DEFAULT 0",
+        ),
+    ),
 )
 
 SCHEMA_VERSION = MIGRATIONS[-1][0]
@@ -238,11 +287,100 @@ class SavedQueue:
     session: dict[str, Any] = field(default_factory=dict)
 
 
+#: Import item statuses. "matched": a strong YouTube match; "review": a
+#: likely one (used, but worth checking); "pending"/"unmatched": no match
+#: yet (kept as a placeholder entry so the playlist order stays right).
+IMPORT_STATUSES = (
+    "pending",
+    "matched",
+    "review",
+    "unmatched",
+    "unavailable",
+    "duplicate",
+    "skipped",
+)
+PLACEHOLDER_PREFIX = "sp-"
+
+
+def is_placeholder(song_id: str) -> bool:
+    """An imported track with no YouTube match yet (it can't be played)."""
+    return song_id.startswith(PLACEHOLDER_PREFIX)
+
+
+@dataclass(frozen=True, slots=True)
+class _ItemTrack:
+    """Just enough of a track to rebuild its placeholder."""
+
+    spotify_id: str | None
+    title: str
+    artist: str
+    album: str
+    duration: float
+    artwork_url: str | None
+
+
+@dataclass(frozen=True, slots=True)
+class ImportInfo:
+    playlist_id: int
+    source: str
+    source_name: str
+    owner: str
+    source_url: str | None
+    total: int
+    imported_at: float
+    counts: dict[str, int]
+
+    @property
+    def matched(self) -> int:
+        return self.counts.get("matched", 0) + self.counts.get("review", 0)
+
+    @property
+    def unmatched(self) -> int:
+        return self.counts.get("pending", 0) + self.counts.get("unmatched", 0)
+
+    @property
+    def skipped(self) -> int:
+        return sum(
+            self.counts.get(k, 0) for k in ("unavailable", "duplicate", "skipped")
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ImportItem:
+    position: int
+    title: str
+    artists: tuple[str, ...]
+    album: str
+    duration: float
+    spotify_id: str | None
+    artwork_url: str | None
+    explicit: bool
+    is_local: bool
+    status: str
+    track_id: str | None
+    confidence: float | None
+    note: str
+
+    @property
+    def artist(self) -> str:
+        return ", ".join(self.artists) or "Unknown artist"
+
+
 LIKED_ORDERS = {
     "added": "f.added_at DESC, t.title",
     "title": "t.title COLLATE NOCASE, t.artist COLLATE NOCASE",
     "artist": "t.artist COLLATE NOCASE, t.title COLLATE NOCASE",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class AddResult:
+    """What adding an import to an existing playlist did."""
+
+    playlist: Playlist
+    added: int
+    already: int  # the same song was in the playlist: skipped
+    unusable: int  # unavailable tracks (not imported)
 
 
 @dataclass(frozen=True, slots=True)
@@ -808,6 +946,379 @@ class Library:
         return new
 
     # -- preferences ---------------------------------------------------
+
+    # -- imported playlists ---------------------------------------------
+
+    def _unique_name(self, conn: sqlite3.Connection, name: str) -> str:
+        """``name``, or ``name (2)``, ``name (3)``...: never reuse a playlist."""
+        base = clean_playlist_name(name)
+        taken = {
+            row[0].casefold()
+            for row in conn.execute("SELECT name FROM playlists").fetchall()
+        }
+        candidate, n = base, 2
+        while candidate.casefold() in taken:
+            suffix = f" ({n})"
+            candidate = base[: MAX_PLAYLIST_NAME - len(suffix)] + suffix
+            n += 1
+        return candidate
+
+    @staticmethod
+    def placeholder_song(track: Any) -> Song:
+        """The entry for an imported track that has no YouTube match yet."""
+        if track.spotify_id:
+            key = track.spotify_id
+            url = f"https://open.spotify.com/track/{track.spotify_id}"
+        else:  # local file or export without ids: stable hash of the metadata
+            digest = hashlib.sha1(
+                f"{track.title}\0{track.artist}\0{track.album}".encode()
+            ).hexdigest()
+            key, url = f"x{digest[:20]}", "https://open.spotify.com/"
+        return Song(
+            id=f"{PLACEHOLDER_PREFIX}{key}",
+            title=track.title,
+            artist=track.artist,
+            duration=round(track.duration or 0),
+            source_url=url,
+            thumbnail_url=track.artwork_url,
+        )
+
+    def create_import(self, playlist: Any) -> tuple[Playlist, ImportInfo]:
+        """Save an imported playlist (a :class:`SpotifyPlaylist`) in one
+        transaction: a new playlist in the original order, every unmatched
+        track as a placeholder, nothing ever overwritten."""
+        now = self._clock()
+        with self._tx() as conn:
+            name = self._unique_name(conn, playlist.name)
+            cursor = conn.execute(
+                "INSERT INTO playlists (name, created_at, updated_at) VALUES (?, ?, ?)",
+                (name, now, now),
+            )
+            pid = int(cursor.lastrowid or 0)
+            conn.execute(
+                "INSERT INTO imports (playlist_id, source, source_id, source_url, "
+                "source_name, owner, total, imported_at) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    pid,
+                    playlist.source,
+                    playlist.playlist_id,
+                    playlist.url,
+                    playlist.name,
+                    playlist.owner,
+                    len(playlist.tracks),
+                    now,
+                ),
+            )
+            order: list[str] = []
+            self._insert_items(conn, pid, playlist.tracks, order, now=now)
+            self._write_order(conn, pid, order)
+        info = self.import_info(pid)
+        assert info is not None
+        return self.playlist(pid), info
+
+    def _insert_items(
+        self,
+        conn: sqlite3.Connection,
+        pid: int,
+        tracks: Sequence[Any],
+        order: list[str],
+        *,
+        now: float,
+        start: int = 0,
+        batch: int = 0,
+        existing: Sequence[tuple[str, str]] = (),
+    ) -> dict[str, int]:
+        """Record ``tracks`` as entries ``start``.. of import ``pid``, appending
+        playable ones (as placeholders) to ``order``. Songs that are already
+        one of the ``existing`` (title, artist) entries are skipped."""
+        from pixelfm.services.matching import same_song
+
+        counts = {"added": 0, "already": 0, "unusable": 0}
+        for offset, track in enumerate(tracks):
+            status, note, track_id = "pending", track.note, None
+            if not track.available:
+                status = "skipped" if "not imported" in track.note else "unavailable"
+                counts["unusable"] += 1
+            elif any(
+                same_song(track.title, track.artists, title, artist)
+                for title, artist in existing
+            ):
+                status, note = "duplicate", "already in the playlist"
+                counts["already"] += 1
+            else:
+                song = self.placeholder_song(track)
+                if song.id in order:
+                    status = "duplicate"
+                    note = (
+                        "already earlier in the playlist"
+                        if song.id not in self._playlist_ids(conn, pid)
+                        else "already in the playlist"
+                    )
+                    counts["already"] += 1
+                else:
+                    self._upsert(conn, song)
+                    conn.execute(
+                        "UPDATE tracks SET unavailable_reason = ?, "
+                        "unavailable_at = ? WHERE id = ?",
+                        ("not matched to a YouTube video yet", now, song.id),
+                    )
+                    order.append(song.id)
+                    track_id = song.id
+                    counts["added"] += 1
+            conn.execute(
+                "INSERT INTO import_items (playlist_id, position, spotify_id, "
+                "title, artists, album, duration, artwork_url, explicit, "
+                "is_local, status, track_id, note, batch) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (
+                    pid,
+                    start + offset,
+                    track.spotify_id,
+                    track.title,
+                    json.dumps(list(track.artists)),
+                    track.album,
+                    track.duration,
+                    track.artwork_url,
+                    int(track.explicit),
+                    int(track.is_local),
+                    status,
+                    track_id,
+                    note,
+                    batch,
+                ),
+            )
+        return counts
+
+    def add_import(self, playlist_id: int, playlist: Any) -> AddResult:
+        """Add an imported list (e.g. read from screenshots) to the end of an
+        existing playlist, in one transaction. Songs already in it are
+        skipped; the rest wait to be matched like any import."""
+        now = self._clock()
+        with self._tx() as conn:
+            ids = self._playlist_ids(conn, playlist_id)
+            existing = [
+                (row["title"], row["artist"])
+                for row in conn.execute(
+                    "SELECT t.title, t.artist FROM playlist_tracks pt "
+                    "JOIN tracks t ON t.id = pt.track_id WHERE pt.playlist_id = ?",
+                    (playlist_id,),
+                )
+            ]
+            imported = conn.execute(
+                "SELECT MAX(position), MAX(batch) FROM import_items "
+                "WHERE playlist_id = ?",
+                (playlist_id,),
+            ).fetchone()
+            if (
+                conn.execute(
+                    "SELECT 1 FROM imports WHERE playlist_id = ?", (playlist_id,)
+                ).fetchone()
+                is None
+            ):
+                conn.execute(
+                    "INSERT INTO imports (playlist_id, source, source_id, "
+                    "source_url, source_name, owner, total, imported_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, 0, ?)",
+                    (
+                        playlist_id,
+                        playlist.source,
+                        playlist.playlist_id,
+                        playlist.url,
+                        playlist.name,
+                        playlist.owner,
+                        now,
+                    ),
+                )
+            start = 0 if imported[0] is None else int(imported[0]) + 1
+            batch = 0 if imported[1] is None else int(imported[1]) + 1
+            order = list(ids)
+            counts = self._insert_items(
+                conn,
+                playlist_id,
+                playlist.tracks,
+                order,
+                now=now,
+                start=start,
+                batch=batch,
+                existing=existing,
+            )
+            conn.execute(
+                "UPDATE imports SET total = total + ? WHERE playlist_id = ?",
+                (len(playlist.tracks), playlist_id),
+            )
+            self._write_order(conn, playlist_id, order)
+        return AddResult(self.playlist(playlist_id), **counts)
+
+    def import_info(self, playlist_id: int) -> ImportInfo | None:
+        row = self._conn.execute(
+            "SELECT * FROM imports WHERE playlist_id = ?", (playlist_id,)
+        ).fetchone()
+        if row is None:
+            return None
+        counts = dict(
+            self._conn.execute(
+                "SELECT status, COUNT(*) FROM import_items WHERE playlist_id = ? "
+                "GROUP BY status",
+                (playlist_id,),
+            ).fetchall()
+        )
+        return ImportInfo(
+            playlist_id,
+            row["source"],
+            row["source_name"],
+            row["owner"] or "",
+            row["source_url"],
+            row["total"],
+            row["imported_at"],
+            counts,
+        )
+
+    def import_items(
+        self, playlist_id: int, statuses: Sequence[str] | None = None
+    ) -> list[ImportItem]:
+        rows = self._conn.execute(
+            "SELECT * FROM import_items WHERE playlist_id = ? ORDER BY position",
+            (playlist_id,),
+        ).fetchall()
+        items = []
+        for row in rows:
+            if statuses is not None and row["status"] not in statuses:
+                continue
+            try:
+                artists = tuple(str(a) for a in json.loads(row["artists"]))
+            except (TypeError, ValueError):
+                artists = ()
+            items.append(
+                ImportItem(
+                    row["position"],
+                    row["title"],
+                    artists,
+                    row["album"] or "",
+                    float(row["duration"] or 0),
+                    row["spotify_id"],
+                    row["artwork_url"],
+                    bool(row["explicit"]),
+                    bool(row["is_local"]),
+                    row["status"],
+                    row["track_id"],
+                    row["confidence"],
+                    row["note"] or "",
+                )
+            )
+        return items
+
+    def set_match(
+        self,
+        playlist_id: int,
+        position: int,
+        song: Song | None,
+        *,
+        status: str,
+        confidence: float | None = None,
+        note: str = "",
+    ) -> str:
+        """Record the result for one imported entry, keeping its place.
+
+        With ``song``, the playlist entry becomes that YouTube video (shown with
+        the imported title, artist, and artwork). Without, it is (or goes back
+        to) the placeholder. Returns the status actually stored: "unmatched"
+        if that video is already another entry of the playlist.
+        """
+        if status not in IMPORT_STATUSES:
+            raise ValueError(status)
+        with self._tx() as conn:
+            row = conn.execute(
+                "SELECT * FROM import_items WHERE playlist_id = ? AND position = ?",
+                (playlist_id, position),
+            ).fetchone()
+            if row is None:
+                raise LibraryError("That imported track no longer exists.")
+            ids = self._playlist_ids(conn, playlist_id)
+            current = row["track_id"]
+            if song is not None and song.id != current and song.id in ids:
+                same_batch = conn.execute(
+                    "SELECT 1 FROM import_items WHERE playlist_id = ? AND "
+                    "track_id = ? AND batch = ?",
+                    (playlist_id, song.id, row["batch"]),
+                ).fetchone()
+                if same_batch is None:
+                    # The playlist already had this song before it was added:
+                    # skip the new copy.
+                    if current in ids:
+                        ids.remove(current)
+                        self._write_order(conn, playlist_id, ids)
+                    conn.execute(
+                        "UPDATE import_items SET status = 'duplicate', "
+                        "track_id = NULL, confidence = ?, note = ? "
+                        "WHERE playlist_id = ? AND position = ?",
+                        (confidence, "already in the playlist", playlist_id, position),
+                    )
+                    return "duplicate"
+                # Its best match is another entry of the same import: keep
+                # this one's place (as a placeholder) for the user to review.
+                status, note, song = "unmatched", "best match is another entry", None
+            if song is None:
+                artists = (
+                    ", ".join(json.loads(row["artists"] or "[]")) or "Unknown artist"
+                )
+                target = self.placeholder_song(
+                    _ItemTrack(
+                        row["spotify_id"],
+                        row["title"],
+                        artists,
+                        row["album"] or "",
+                        float(row["duration"] or 0),
+                        row["artwork_url"],
+                    )
+                )
+                self._upsert(conn, target)
+                conn.execute(
+                    "UPDATE tracks SET unavailable_reason = ?, unavailable_at = ? "
+                    "WHERE id = ?",
+                    ("not matched to a YouTube video yet", self._clock(), target.id),
+                )
+            else:
+                target = song
+                self._upsert(conn, target)
+                conn.execute(
+                    "UPDATE tracks SET unavailable_reason = NULL WHERE id = ?",
+                    (song.id,),
+                )
+            if current in ids:
+                ids[ids.index(current)] = target.id  # same place in the order
+            else:  # removed by hand meanwhile: put it back at its place
+                earlier = {
+                    r[0]
+                    for r in conn.execute(
+                        "SELECT track_id FROM import_items WHERE playlist_id = ? "
+                        "AND position < ? AND track_id IS NOT NULL",
+                        (playlist_id, position),
+                    )
+                }
+                ids.insert(sum(1 for tid in ids if tid in earlier), target.id)
+            self._write_order(conn, playlist_id, ids)
+            conn.execute(
+                "UPDATE import_items SET status = ?, track_id = ?, confidence = ?, "
+                "note = ? WHERE playlist_id = ? AND position = ?",
+                (status, target.id, confidence, note, playlist_id, position),
+            )
+        return status
+
+    def import_meta(self, track_id: str) -> dict[str, str] | None:
+        """Imported metadata for a playable track (album, original artists)."""
+        row = self._conn.execute(
+            "SELECT title, artists, album FROM import_items WHERE track_id = ? "
+            "AND status IN ('matched', 'review') LIMIT 1",
+            (track_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        try:
+            artists = ", ".join(json.loads(row["artists"]))
+        except (TypeError, ValueError):
+            artists = ""
+        return {"title": row["title"], "artist": artists, "album": row["album"] or ""}
 
     def get_pref(self, key: str, default: Any = None) -> Any:
         row = self._conn.execute(

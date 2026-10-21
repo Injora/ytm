@@ -435,6 +435,7 @@ class ArtworkService:
         self.rendered: LRUCache[tuple[object, ...], TerminalArt] = LRUCache(
             render_cache_size
         )
+        self.covers: LRUCache[tuple[str, int, int], Image.Image] = LRUCache(16)
 
     def _fetch(self, url: str) -> bytes:
         """Disk cache first, then the network. Runs in a worker thread."""
@@ -486,6 +487,30 @@ class ArtworkService:
             )
             self.images.set(url, data)
         return data
+
+    async def cover_image(
+        self, song: Song | None, width: int, height: int
+    ) -> Image.Image | None:
+        """The actual cover, cropped and scaled to ``width`` x ``height``
+        pixels, for terminals that can draw images. ``None`` on any failure
+        (the character rendering stays on screen)."""
+        if song is None or not song.thumbnail_url or width < 1 or height < 1:
+            return None
+        key = (song.thumbnail_url, width, height)
+        if (cover := self.covers.get(key)) is not None:
+            return cover
+
+        def prepare(data: bytes) -> Image.Image:
+            image = trim_letterbox(decode_image(data))
+            return fit_cells(image, width, height)
+
+        try:
+            data = await self.image_data(song.thumbnail_url)
+            cover = await run_in_thread(prepare, data)
+        except Exception:
+            return None
+        self.covers.set(key, cover)
+        return cover
 
     async def artwork_for(
         self,

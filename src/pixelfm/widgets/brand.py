@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 from textual.app import ComposeResult
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Static
@@ -37,13 +39,28 @@ def pixel_text(word: str) -> list[str]:
     return lines
 
 
-def logo_markup() -> str:
-    """Two-tone logo: PIXEL in the primary colour, FM in the secondary."""
+def logo_markup(colours: Sequence[str] | None = None) -> str:
+    """Two-tone logo: PIXEL in the primary colour, FM in the secondary.
+
+    With ``colours`` (RAVE lights) each column takes the colour under it, so
+    the light rig's gradient runs through the letters."""
     left, right = pixel_text("PIXEL"), pixel_text("FM")
-    return "\n".join(
-        f"[$primary]{a}[/]  [$secondary]{b}[/]"
-        for a, b in zip(left, right, strict=True)
-    )
+    if not colours:
+        return "\n".join(
+            f"[$primary]{a}[/]  [$secondary]{b}[/]"
+            for a, b in zip(left, right, strict=True)
+        )
+    lines = []
+    for a, b in zip(left, right, strict=True):
+        row = f"{a}  {b}"
+        width = len(row)
+        lines.append(
+            "".join(
+                f"[{colours[i * len(colours) // width]}]{ch}[/]" if ch != " " else " "
+                for i, ch in enumerate(row)
+            )
+        )
+    return "\n".join(lines)
 
 
 class BrandBar(Horizontal):

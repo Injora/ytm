@@ -10,3 +10,4 @@ dist/
 node_modules/
 *.tgz
 python/*.whl
+src/pixelfm/native/PixelFMMedia.app/

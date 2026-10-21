@@ -33,6 +33,7 @@ class ViewTabs(Widget):
     counts: reactive[dict[str, int]] = reactive(dict, always_update=True)
     flags: reactive[str] = reactive("")
     compact: reactive[bool] = reactive(False)
+    accent: reactive[str | None] = reactive(None)  # RAVE light on the active tab
 
     def render(self) -> str:
         parts = []
@@ -42,7 +43,8 @@ class ViewTabs(Widget):
             count = self.counts.get(view)
             suffix = f" {count}" if count else ""
             if view == self.active:
-                parts.append(f"[b reverse $primary] {number} {label}{suffix} [/]")
+                colour = self.accent or "$primary"
+                parts.append(f"[b reverse {colour}] {number} {label}{suffix} [/]")
             else:
                 parts.append(
                     f"[$text-muted] [b $secondary]{number}[/] {label}{suffix} [/]"
@@ -67,6 +69,9 @@ class PlaylistNav(OptionList):
     BINDINGS = [
         Binding("enter", "app.playlist_play", "Play all"),
         Binding("Z", "app.shuffle_playlist", "Shuffle"),
+        Binding("I", "app.import_playlist", "Import"),
+        Binding("M", "app.review_matches", "Matches"),
+        Binding("X", "app.stop_matching", "Stop matching", show=False),
         Binding("A", "app.playlist_append", "Append"),
         Binding("l,right", "app.focus_playlist_tracks", "Tracks", show=False),
         Binding("c", "app.playlist_create", "New"),

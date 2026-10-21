@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pixelfm"
-version = "2.1.1"
+version = "2.3.0"
 description = "A retro-futuristic terminal music player for YouTube."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -28,6 +28,7 @@ dependencies = [
     "yt-dlp[default]>=2026.8.19",
     "pillow>=12",
     "certifi>=2024",
+    "textual-image>=0.14.1,<0.15",  # real covers in terminals with image support
 ]
 
 [project.optional-dependencies]
@@ -38,10 +39,14 @@ dev = [
 ]
 
 [project.scripts]
-party = "pixelfm.__main__:main"
+pixelfm = "pixelfm.__main__:main"
+pfm = "pixelfm.__main__:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/pixelfm"]
+# The macOS media helper is built (scripts/build-helper.js), not committed,
+# so it is gitignored; include it in the wheel explicitly.
+artifacts = ["src/pixelfm/native/PixelFMMedia.app/**"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

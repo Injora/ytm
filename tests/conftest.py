@@ -23,6 +23,11 @@ def isolated_dirs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("PIXELFM_LOG_FILE", str(tmp_path / "pixelfm.log"))
     monkeypatch.setenv("PIXELFM_REDUCED_MOTION", "0")  # don't read macOS settings
     monkeypatch.delenv("NO_COLOR", raising=False)
+    # Never start the real macOS media helper (it would show in Control Centre).
+    monkeypatch.setenv("PIXELFM_MEDIA_CONTROLS", "off")
+    # Never read or write the real Keychain from tests.
+    monkeypatch.setenv("PIXELFM_TOKEN_STORE", "memory")
+    monkeypatch.delenv("PIXELFM_SPOTIFY_CLIENT_ID", raising=False)
 
 
 @pytest.fixture

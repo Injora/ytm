@@ -350,7 +350,7 @@ def test_upgrade_v2_to_current_backfills_play_counts(tmp_path: Path) -> None:
     path = tmp_path / "library.sqlite3"
     _build_v2(path)
     library = Library.open(path)
-    assert schema_version(library._conn) == SCHEMA_VERSION == 4
+    assert schema_version(library._conn) == SCHEMA_VERSION == 6
     [recent] = library.recent()
     assert recent.play_count == 3 and recent.timestamp == 30.0
     assert library.favorite_ids() == {A.id}

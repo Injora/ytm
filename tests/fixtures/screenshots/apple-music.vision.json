@@ -1,0 +1,310 @@
+{
+"height": 1200,
+"lines": [
+{
+"w": 304.5,
+"x": 60.4,
+"y": 58.3,
+"confidence": 1,
+"h": 55.6,
+"text": "Favourites"
+},
+{
+"w": 214.2,
+"x": 60.8,
+"text": "Playlist • 8 songs",
+"y": 143.6,
+"h": 28.7,
+"confidence": 1
+},
+{
+"confidence": 1,
+"text": "Song",
+"x": 60.8,
+"w": 60.8,
+"h": 25.5,
+"y": 239.4
+},
+{
+"text": "Blinding Lights",
+"y": 290.0,
+"w": 188.7,
+"x": 57.6,
+"h": 32.3,
+"confidence": 1
+},
+{
+"y": 357.0,
+"x": 60.8,
+"h": 29.2,
+"w": 313.4,
+"confidence": 1,
+"text": "Levitating (feat. DaBaby)"
+},
+{
+"w": 105.5,
+"x": 57.6,
+"h": 28.7,
+"confidence": 1,
+"text": "bad guy",
+"y": 427.7
+},
+{
+"x": 54.4,
+"confidence": 1,
+"w": 182.3,
+"y": 494.7,
+"text": "Mr. Brightside",
+"h": 28.7
+},
+{
+"x": 60.7,
+"w": 153.6,
+"h": 26.0,
+"confidence": 1,
+"text": "Heat Waves",
+"y": 561.5
+},
+{
+"text": "Tum Hi Ho",
+"h": 25.9,
+"confidence": 1,
+"y": 628.5,
+"w": 134.4,
+"x": 60.7
+},
+{
+"confidence": 1,
+"h": 25.5,
+"y": 695.7,
+"w": 198.3,
+"text": "Don't Start Now",
+"x": 60.8
+},
+{
+"text": "Sweater Weather",
+"x": 60.8,
+"y": 766.0,
+"h": 22.3,
+"confidence": 1,
+"w": 223.8
+},
+{
+"confidence": 1,
+"text": "Artist",
+"y": 239.4,
+"x": 841.0,
+"h": 22.3,
+"w": 64.0
+},
+{
+"confidence": 1,
+"h": 23,
+"y": 290.0,
+"x": 841.0,
+"text": "The Weeknd",
+"w": 159.9
+},
+{
+"text": "Dua Lipa, DaBaby",
+"x": 841.0,
+"y": 357.0,
+"w": 230.2,
+"h": 29.2,
+"confidence": 1
+},
+{
+"w": 134.3,
+"h": 22.3,
+"x": 841.0,
+"text": "Billie Eilish",
+"confidence": 1,
+"y": 427.7
+},
+{
+"y": 494.7,
+"h": 22.3,
+"confidence": 1,
+"text": "The Killers",
+"w": 134.3,
+"x": 841.0
+},
+{
+"w": 179.1,
+"h": 22.3,
+"x": 841.0,
+"text": "Glass Animals",
+"y": 561.7,
+"confidence": 1
+},
+{
+"confidence": 1,
+"y": 627.4,
+"text": "Arijit Singh",
+"x": 837.5,
+"w": 138.1,
+"h": 34.5
+},
+{
+"y": 698.8,
+"confidence": 1,
+"text": "Dua Lipa",
+"x": 841.0,
+"w": 115.2,
+"h": 25.8
+},
+{
+"w": 252.6,
+"confidence": 1,
+"x": 841.0,
+"h": 25.5,
+"text": "The Neighbourhood",
+"y": 766.0
+},
+{
+"w": 73.8,
+"h": 23.1,
+"x": 1362.1,
+"confidence": 1,
+"y": 239.0,
+"text": "Album"
+},
+{
+"text": "After Hours",
+"w": 150.4,
+"h": 29.3,
+"confidence": 1,
+"x": 1355.8,
+"y": 290.1
+},
+{
+"text": "Future Nostalgia",
+"h": 32.4,
+"confidence": 1,
+"x": 1359.0,
+"y": 357.0,
+"w": 207.8
+},
+{
+"confidence": 1,
+"text": "WHEN WE ALL FALL ASLEEP",
+"h": 29.2,
+"y": 424.0,
+"x": 1355.8,
+"w": 396.5
+},
+{
+"h": 27.0,
+"w": 118.6,
+"confidence": 1,
+"text": "Hot Fuss",
+"x": 1355.7,
+"y": 494.0
+},
+{
+"w": 140.8,
+"y": 561.5,
+"x": 1359.0,
+"text": "Dreamland",
+"h": 29.1,
+"confidence": 1
+},
+{
+"h": 35.7,
+"text": "Aashiqui 2",
+"x": 1355.7,
+"y": 625.2,
+"confidence": 1,
+"w": 140.8
+},
+{
+"confidence": 1,
+"h": 32.3,
+"text": "Future Nostalgia",
+"x": 1355.8,
+"y": 695.7,
+"w": 214.2
+},
+{
+"text": "I Love You.",
+"y": 766.0,
+"w": 147.1,
+"confidence": 1,
+"x": 1355.8,
+"h": 22.3
+},
+{
+"x": 1995.3,
+"h": 31.9,
+"y": 233.0,
+"w": 67.2,
+"confidence": 1,
+"text": "Time"
+},
+{
+"x": 1995.3,
+"y": 280.9,
+"text": "3:20",
+"h": 38.3,
+"w": 64.0,
+"confidence": 1
+},
+{
+"w": 67.2,
+"h": 38.3,
+"confidence": 1,
+"text": "3:23",
+"x": 1992.2,
+"y": 351.1
+},
+{
+"w": 67.2,
+"h": 41.5,
+"confidence": 1,
+"x": 1992.2,
+"y": 418.1,
+"text": "3:14"
+},
+{
+"y": 488.3,
+"w": 67.2,
+"x": 1992.2,
+"confidence": 1,
+"h": 35.1,
+"text": "3:42"
+},
+{
+"y": 555.3,
+"x": 1989.0,
+"confidence": 1,
+"w": 70.3,
+"h": 38.3,
+"text": "3:58"
+},
+{
+"w": 64.0,
+"h": 35.1,
+"confidence": 1,
+"x": 1995.3,
+"y": 622.3,
+"text": "4:22"
+},
+{
+"y": 689.4,
+"h": 38.3,
+"text": "3:03",
+"w": 67.2,
+"confidence": 1,
+"x": 1992.2
+},
+{
+"confidence": 1,
+"x": 1995.3,
+"w": 60.8,
+"h": 25.5,
+"text": "4:00",
+"y": 766.0
+}
+],
+"width": 2200
+}

@@ -496,13 +496,13 @@ async def test_party_styles_from_settings_are_saved() -> None:
         settings = app.query_one(SettingsList)
         settings.highlighted = settings.get_option_index("party")
         seen = []
-        for _ in range(4):
+        for _ in range(5):
             await pilot.press("enter")
             await pilot.pause()
             seen.append(None if app._party is None else str(app._party.mode))
-        assert seen == ["ambient", "pulse", "strobe", None]
+        assert seen == ["ambient", "pulse", "strobe", "rave", None]
         assert library.get_pref("party") is False
-        assert library.get_pref("party_mode") == "strobe"
+        assert library.get_pref("party_mode") == "rave"
 
 
 async def test_party_preference_restores_and_exit_stops_it() -> None:

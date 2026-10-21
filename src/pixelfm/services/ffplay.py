@@ -34,6 +34,7 @@ from typing import Protocol
 
 from pixelfm._reaper import NullReaper, ProcessReaper, default_reaper
 from pixelfm.models import Song
+from pixelfm.services.deps import install_hint
 from pixelfm.services.metering import MeterParser, StereoLevel, audio_filter
 from pixelfm.services.playback import BasePlayer, clamp_volume
 from pixelfm.services.streams import StreamError, StreamInfo
@@ -42,7 +43,8 @@ from pixelfm.state import ACTIVE, AudioFx, PlaybackStatus
 log = logging.getLogger(__name__)
 
 FFPLAY_MISSING = (
-    "ffplay not found, so audio is unavailable. Install FFmpeg: brew install ffmpeg"
+    "ffplay not found, so audio is unavailable. Install FFmpeg: "
+    + install_hint("ffmpeg")
 )
 PROTOCOL_WHITELIST = "https,http,tls,tcp,crypto,httpproxy"
 #: Seconds from the end within which an exit counts as a natural end.
