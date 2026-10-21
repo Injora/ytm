@@ -402,7 +402,9 @@ ffplay skip audio.
   image pixels in the two colours that fit them best, after smooth (Lanczos)
   downscaling, with no scanline striping.
 - On a terminal 40+ rows tall the booth shows the cover at 32×16 cells. `m`
-  switches to mono or glyph styles (characters, even in image terminals).
+  switches to mono or glyph styles (characters, even in image terminals)
+  until you quit; PixelFM always starts in colour unless `artwork_mode` in
+  the config file says otherwise.
   `--images off` (or `PIXELFM_GRAPHICS=off`) always uses characters; for a
   terminal that supports images but doesn't say so, try `--images kitty` or
   `--images sixel`.

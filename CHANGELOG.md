@@ -1,6 +1,13 @@
 # Changelog
 
-## 2.3.0 (not published yet)
+## 2.3.1
+
+- The colour (pixelated) cover is always the default. The artwork style
+  (`m`) is no longer remembered between runs, so a stray key press can't
+  leave the cover as ASCII; set `artwork_mode` in the config file for a
+  different permanent style.
+
+## 2.3.0
 
 Includes everything planned for 2.2 (RAVE MODE), which was never released
 on its own.

@@ -192,7 +192,6 @@ class SettingsMixin:
         elif key == "artwork":
             modes = [m.value for m in ArtworkMode]
             self.artwork_mode = ArtworkMode(cycle(modes, self.artwork_mode.value))
-            self._save_pref("artwork_mode", self.artwork_mode.value)
             self.load_artwork(self._newest_song())
         elif key == "liked_order":
             self._liked_order = cycle(list(LIKED_ORDERS), self._liked_order)

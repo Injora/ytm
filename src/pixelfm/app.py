@@ -265,9 +265,10 @@ class PixelFMApp(
         # NO_COLOR (https://no-color.org): Textual renders monochrome; ASCII
         # artwork reads better than grey blocks.
         self.no_color = "NO_COLOR" in os.environ
-        mode = self._pref("artwork_mode", self.config.artwork_mode)
-        if mode not in {m.value for m in ArtworkMode}:
-            mode = self.config.artwork_mode
+        # Always start from the configured style (colour by default): `m` and
+        # Settings change it for this session only, so a stray key press
+        # can't leave the cover as ASCII for good.
+        mode = self.config.artwork_mode
         if self.no_color and mode == "color":
             mode = "mono"
         self.artwork_mode = ArtworkMode(mode)
@@ -1340,7 +1341,6 @@ class PixelFMApp(
 
     def action_cycle_artwork(self) -> None:
         self.artwork_mode = self.artwork_mode.next()
-        self._save_pref("artwork_mode", self.artwork_mode.value)
         self.load_artwork(self._newest_song())
         self._refresh_meta()
         self._status(f"Artwork mode: {self.artwork_mode}")

@@ -48,7 +48,7 @@ PixelFM runs on **macOS** and **Linux**. It doesn't run on Windows yet.
    npm install -g pixelfm
    ```
    (Until PixelFM is published on npm, install the package file you were
-   given instead: `npm install -g ./pixelfm-2.3.0.tgz`. See
+   given instead: `npm install -g ./pixelfm-2.3.1.tgz`. See
    [Share PixelFM with a friend](#share-pixelfm-with-a-friend).)
 4. **Start it:**
    ```sh
@@ -443,7 +443,7 @@ to change it; `←` goes back a step. Changes are saved at once.
 | Layout | auto, full, compact (`v` switches) |
 | Effects | auto, full, reduced |
 | Meters & spectrum | on / off (`V`) |
-| Artwork style | color, mono, glyph (`m`) |
+| Artwork style | color, mono, glyph (`m`); not saved, so PixelFM always starts in color |
 | Liked songs order | date added, title, artist |
 | Spotify client ID / sign-in | set it up, or sign out |
 | Downloads folder | where downloads go |
@@ -516,12 +516,12 @@ Until PixelFM is published on npm, send the package file:
    cd ~/ytm
    npm pack
    ```
-   This makes `pixelfm-2.3.0.tgz`.
+   This makes `pixelfm-2.3.1.tgz`.
 2. **Send** that file to your friend.
 3. **Your friend** installs Python 3.12+ and Node.js (see
    [Install PixelFM](#install-pixelfm)), then runs:
    ```sh
-   npm install -g ./pixelfm-2.3.0.tgz
+   npm install -g ./pixelfm-2.3.1.tgz
    pixelfm
    ```
    On the first start PixelFM offers to install FFmpeg (and Tesseract on

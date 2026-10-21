@@ -351,6 +351,17 @@ async def test_artwork_mode_cycles() -> None:
             assert art is not None and art.mode is expected
 
 
+async def test_artwork_mode_is_not_remembered() -> None:
+    library = Library.memory()
+    library.set_pref("artwork_mode", "mono")  # saved by an older version
+    assert make_app(library=library).artwork_mode is ArtworkMode.COLOR
+    app = make_app()
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.press("m")
+        assert app.artwork_mode is ArtworkMode.MONO
+    assert app.library.get_pref("artwork_mode") is None
+
+
 async def test_configured_artwork_mode_and_size() -> None:
     app = make_app(artwork_mode="glyph", artwork_width=10, artwork_height=5)
     async with app.run_test(size=(120, 40)) as pilot:

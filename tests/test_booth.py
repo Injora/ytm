@@ -188,7 +188,6 @@ async def test_header_reports_status_and_engine() -> None:
     [
         ("layout", "layout", "full"),
         ("effects", "effects", "full"),
-        ("artwork", "artwork_mode", "mono"),
         ("liked_order", "liked_order", "title"),
         ("theme", "theme", "pixelfm"),  # after the default, "music"
     ],

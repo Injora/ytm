@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pixelfm"
-version = "2.3.0"
+version = "2.3.1"
 description = "A retro-futuristic terminal music player for YouTube."
 readme = "README.md"
 requires-python = ">=3.12"
